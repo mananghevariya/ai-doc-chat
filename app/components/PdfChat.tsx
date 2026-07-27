@@ -28,7 +28,22 @@ export default function PdfChat() {
           Array.isArray(parsed.docInfo.chunks) &&
           Array.isArray(parsed.messages)
         ) {
-          setDocInfo(parsed.docInfo);
+          // Normalize restored session to support documents array
+          const restoredDocs = parsed.docInfo.documents || [
+            {
+              id: "doc-1",
+              fileName: parsed.docInfo.fileName || "Document.pdf",
+              fileSize: parsed.docInfo.fileSize || "1 MB",
+              pageCount: parsed.docInfo.pageCount || 1,
+              wordCount: parsed.docInfo.wordCount || 500,
+              chunks: parsed.docInfo.chunks || [],
+            },
+          ];
+
+          setDocInfo({
+            ...parsed.docInfo,
+            documents: restoredDocs,
+          });
           setMessages(
             parsed.messages.map((m) => ({ ...m, isNew: false }))
           );
@@ -56,7 +71,7 @@ export default function PdfChat() {
         };
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sessionData));
       } catch {
-        // Silently ignore quota / storage errors
+        // Silently ignore storage errors
       }
     } else if (!docInfo) {
       try {
@@ -94,8 +109,13 @@ export default function PdfChat() {
 
   if (!isRestored) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F7F8FC]">
-        <div className="w-6 h-6 border-2 border-[#4C6FFF] border-t-transparent rounded-full animate-spin" />
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8f9fa" }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: "50%", animation: "spin 0.8s linear infinite",
+          border: "3px solid #ede9fe", borderTopColor: "#667eea",
+          boxShadow: "0 0 16px rgba(102,126,234,0.2)"
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
@@ -107,6 +127,7 @@ export default function PdfChat() {
   return (
     <ChatContainer
       docInfo={docInfo}
+      setDocInfo={setDocInfo}
       messages={messages}
       setMessages={setMessages}
       onReset={handleReset}

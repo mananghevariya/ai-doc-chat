@@ -114,20 +114,25 @@ export async function POST(req: NextRequest) {
       "gemini-2.0-flash",
     ];
 
-    const slicedChunks = documentChunks.slice(0, 25);
+    const slicedChunks = documentChunks.slice(0, 50);
     const indexedContext = slicedChunks
       .map((chunk, idx) => `[Chunk ${idx + 1}]\n${chunk}`)
       .join("\n\n---\n\n");
 
-    const prompt = `You are a precise document assistant. Your sole job is to answer the user's question based strictly on the document context provided below.
+    const prompt = `You are a precise multi-document AI assistant. Your sole job is to answer the user's question based strictly on the document context provided below.
+
+Context format:
+Each chunk below starts with [Chunk X] and contains origin tags like [Document: filename.pdf].
 
 Rules you must follow:
-1. Answer ONLY using information from the context. Do not use any external knowledge.
-2. If the answer is not in the context, set answer to: "I couldn't find that information in the provided document." and set sourceChunkIndexes to [].
-3. Identify which Chunk number(s) (e.g. 1, 2) were directly used to answer the question.
-4. Output your response strictly as a JSON object matching this exact schema:
+1. Answer ONLY using information from the provided context. Do not use any external knowledge.
+2. If the user asks about a specific document (e.g., "this document", "the new document", "Drashtin's resume", or a specific file name), focus your answer on that specific document.
+3. If the user asks a general question (e.g., "what is in these documents?"), synthesize information across all relevant documents and clearly state which document each detail comes from.
+4. Identify which Chunk number(s) (e.g., 1, 2) were directly used to answer the question.
+5. If the answer is not in the context, set answer to: "I couldn't find that information in the provided document(s)." and set sourceChunkIndexes to [].
+6. Output strictly as JSON matching this schema:
 {
-  "answer": "Your clear, concise answer here...",
+  "answer": "Your clear, concise answer...",
   "sourceChunkIndexes": [1, 2]
 }
 

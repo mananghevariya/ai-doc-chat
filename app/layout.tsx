@@ -1,21 +1,10 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
 import "./globals.css";
 
-const fraunces = Fraunces({
-  variable: "--font-serif",
-  subsets: ["latin"],
-});
-
-const inter = Inter({
-  variable: "--font-sans",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "AI Document Chat — Light Liquid Glass Edition",
+  title: "DocChat AI — Document Intelligence",
   description:
-    "Upload PDFs and chat with your documents using Gemini AI. Get instant, accurate answers from your files.",
+    "Upload PDFs and chat with your documents using Gemini AI. Get instant, accurate answers with source citations.",
 };
 
 export default function RootLayout({
@@ -24,11 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${fraunces.variable} ${inter.variable} font-sans h-full antialiased text-[#1A1B2E] bg-[#F7F8FC]`}
-    >
-      <body className="relative min-h-full flex flex-col overflow-x-hidden bg-[#F7F8FC] text-[#1A1B2E]">
+    <html lang="en" style={{ height: "100%" }}>
+      <body style={{ height: "100%", maxHeight: "100vh", overflow: "hidden", margin: 0 }}>
         {children}
       </body>
     </html>

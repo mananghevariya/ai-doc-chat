@@ -3,10 +3,20 @@ export interface Message {
   role: "user" | "assistant";
   content: string;
   sourceChunkIndexes?: number[];
-  isNew?: boolean; // Used to trigger typewriter animation for fresh assistant messages
+  isNew?: boolean;
+}
+
+export interface DocumentItem {
+  id: string;
+  fileName: string;
+  fileSize: string;
+  pageCount: number;
+  wordCount: number;
+  chunks: string[];
 }
 
 export interface DocInfo {
+  documents: DocumentItem[];
   chunks: string[];
   pageCount: number;
   wordCount: number;
