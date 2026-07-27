@@ -1,5 +1,5 @@
-import ComingSoon from "./components/ComingSoon";
+import PdfChat from "./components/PdfChat";
 
 export default function Page() {
-  return <ComingSoon />;
+  return <PdfChat />;
 }
