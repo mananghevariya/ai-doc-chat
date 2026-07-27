@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PDFParse } from "pdf-parse";
+
+// DOMMatrix polyfill for pdfjs-dist in serverless environments
+if (typeof (globalThis as any).DOMMatrix === "undefined") {
+  (globalThis as any).DOMMatrix = class DOMMatrix {
+    constructor() {}
+  };
+}
+
+import { extractText } from "unpdf";
 
 export const runtime = "nodejs";
 
@@ -58,14 +66,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const uint8Array = new Uint8Array(await file.arrayBuffer());
 
-    // pdf-parse v2: class-based API
-    const parser = new PDFParse({ data: buffer });
-    const result = await parser.getText();
-    await parser.destroy();
+    const { text: rawExtractedText, totalPages } = await extractText(uint8Array, {
+      mergePages: true,
+    });
 
-    const text = result.text?.trim();
+    const textResult = rawExtractedText as string | string[];
+    const text = (
+      typeof textResult === "string"
+        ? textResult
+        : Array.isArray(textResult)
+          ? textResult.join("\n\n")
+          : ""
+    )?.trim();
 
     if (!text) {
       return NextResponse.json(
@@ -79,15 +93,13 @@ export async function POST(req: NextRequest) {
 
     const chunks = splitIntoChunks(text);
     const wordCount = text.split(/\s+/).filter(Boolean).length;
-    const pageCount = result.total; // total pages from pdf-parse v2 TextResult
+    const pageCount = totalPages || 1;
 
     return NextResponse.json({ chunks, pageCount, wordCount });
   } catch (err: any) {
     console.error("========== UPLOAD ERROR ==========");
     console.error("[/api/upload] Error Message:", err?.message);
-    console.error("[/api/upload] Error Name:", err?.name);
     console.error("[/api/upload] Error Stack:", err?.stack);
-    console.error("[/api/upload] Full Error Object:", err);
     console.error("==================================");
 
     return NextResponse.json(
