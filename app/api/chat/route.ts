@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+export const runtime = "nodejs";
+
 function extractAnswerByRegex(text: string): string | null {
   const match = text.match(/["']answer["']\s*:\s*"((?:[^"\\]|\\[\s\S])*)"/);
   if (match && match[1]) {

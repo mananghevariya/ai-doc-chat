@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PDFParse } from "pdf-parse";
 
+export const runtime = "nodejs";
+
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 /**
@@ -80,10 +82,20 @@ export async function POST(req: NextRequest) {
     const pageCount = result.total; // total pages from pdf-parse v2 TextResult
 
     return NextResponse.json({ chunks, pageCount, wordCount });
-  } catch (err) {
-    console.error("[/api/upload]", err);
+  } catch (err: any) {
+    console.error("========== UPLOAD ERROR ==========");
+    console.error("[/api/upload] Error Message:", err?.message);
+    console.error("[/api/upload] Error Name:", err?.name);
+    console.error("[/api/upload] Error Stack:", err?.stack);
+    console.error("[/api/upload] Full Error Object:", err);
+    console.error("==================================");
+
     return NextResponse.json(
-      { error: "Failed to process the PDF. Please try again." },
+      {
+        error: `Failed to process the PDF: ${err?.message || String(err)}`,
+        details: String(err?.message || err),
+        stack: String(err?.stack || ""),
+      },
       { status: 500 }
     );
   }
