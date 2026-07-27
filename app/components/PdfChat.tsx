@@ -29,7 +29,6 @@ export default function PdfChat() {
           Array.isArray(parsed.messages)
         ) {
           setDocInfo(parsed.docInfo);
-          // Mark all restored messages as isNew: false so typewriter doesn't re-animate on reload
           setMessages(
             parsed.messages.map((m) => ({ ...m, isNew: false }))
           );
@@ -93,11 +92,10 @@ export default function PdfChat() {
     }
   };
 
-  // Render minimal dark screen during brief localStorage hydration check
   if (!isRestored) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0B0B1E]">
-        <div className="w-6 h-6 border-2 border-[#C9A961] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-[#F7F8FC]">
+        <div className="w-6 h-6 border-2 border-[#4C6FFF] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }

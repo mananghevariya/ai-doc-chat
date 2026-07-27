@@ -5,7 +5,7 @@ export function Spinner({ size = "md" }: { size?: "sm" | "md" }) {
   const cls = size === "sm" ? "w-4 h-4" : "w-5 h-5";
   return (
     <svg
-      className={`${cls} animate-spin text-[#C9A961]`}
+      className={`${cls} animate-spin text-[#4C6FFF]`}
       fill="none"
       viewBox="0 0 24 24"
       aria-label="Loading"
@@ -31,9 +31,9 @@ export function ErrorBanner({ message }: { message: string }) {
   return (
     <div
       role="alert"
-      className="flex items-start gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-rose-200 text-xs sm:text-sm backdrop-blur-md"
+      className="flex items-start gap-2 rounded-2xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-rose-700 text-xs sm:text-sm backdrop-blur-md font-medium"
     >
-      <span className="mt-0.5 shrink-0 text-rose-400">⚠</span>
+      <span className="mt-0.5 shrink-0 text-rose-500">⚠</span>
       <span>{message}</span>
     </div>
   );
@@ -42,15 +42,15 @@ export function ErrorBanner({ message }: { message: string }) {
 export function TypingDots() {
   return (
     <div className="flex items-end gap-3 mb-4">
-      <div className="w-8 h-8 rounded-full bg-[#8B7FD6]/20 border border-[#8B7FD6]/30 flex items-center justify-center shrink-0">
-        <BotIcon className="w-4 h-4 text-[#8B7FD6]" />
+      <div className="w-8 h-8 rounded-full bg-[#4C6FFF]/15 border border-[#4C6FFF]/25 flex items-center justify-center shrink-0 shadow-sm">
+        <BotIcon className="w-4 h-4 text-[#4C6FFF]" />
       </div>
-      <div className="rounded-2xl rounded-bl-sm border border-white/10 bg-[#14142B]/70 backdrop-blur-md px-4 py-3 shadow-lg">
+      <div className="rounded-[22px] rounded-bl-xs border border-white/80 bg-white/75 backdrop-blur-xl px-4 py-3 shadow-lg shadow-[#4C6FFF]/5">
         <div className="flex gap-1.5 items-center h-4">
           {[0, 1, 2].map((i) => (
             <span
               key={i}
-              className="w-1.5 h-1.5 rounded-full bg-[#C9A961] animate-bounce"
+              className="w-1.5 h-1.5 rounded-full bg-[#4C6FFF] animate-bounce"
               style={{ animationDelay: `${i * 160}ms` }}
             />
           ))}

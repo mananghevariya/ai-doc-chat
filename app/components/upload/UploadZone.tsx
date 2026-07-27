@@ -100,36 +100,37 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Ambient glowing luxury backdrop */}
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden bg-[#F7F8FC]">
+      {/* Animated Light Liquid Glass Floating Blobs */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 flex items-center justify-center"
+        className="pointer-events-none absolute inset-0 overflow-hidden"
       >
-        <div className="w-[600px] h-[600px] rounded-full bg-[#8B7FD6]/10 blur-[120px] transition-all duration-700" />
-        <div className="w-[350px] h-[350px] rounded-full bg-[#C9A961]/10 blur-[90px] absolute" />
+        <div className="animate-blob-1 absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-[#4C6FFF]/20 blur-3xl" />
+        <div className="animate-blob-2 absolute bottom-1/4 right-1/4 w-[480px] h-[480px] rounded-full bg-[#9B7FFF]/20 blur-3xl" />
+        <div className="animate-blob-3 absolute top-1/2 right-1/3 w-[380px] h-[380px] rounded-full bg-[#FF7A59]/15 blur-3xl" />
       </div>
 
       {/* Hero Header */}
       <div className="relative z-10 mb-8 sm:mb-10 text-center max-w-xl">
-        <div className="inline-flex items-center gap-2 rounded-full border border-[#C9A961]/30 bg-[#C9A961]/10 px-4 py-1.5 text-xs font-medium tracking-widest text-[#C9A961] uppercase mb-6 backdrop-blur-md shadow-sm">
-          <SparklesIcon className="w-3.5 h-3.5" />
-          <span>Luxury Glass Architecture</span>
+        <div className="inline-flex items-center gap-2 rounded-full border border-[#FF7A59]/30 bg-[#FF7A59]/10 px-4 py-1.5 text-xs font-semibold tracking-wider text-[#FF7A59] uppercase mb-6 backdrop-blur-md shadow-sm">
+          <SparklesIcon className="w-3.5 h-3.5 text-[#FF7A59]" />
+          <span>Light Liquid Glass</span>
         </div>
-        <h1 className="text-3xl sm:text-5xl font-serif font-bold tracking-tight text-[#F0EEF6] leading-tight">
+        <h1 className="text-4xl sm:text-6xl font-serif font-bold tracking-tight text-[#1A1B2E] leading-tight">
           AI Document{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C9A961] via-[#E4D19D] to-[#8B7FD6]">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4C6FFF] via-[#9B7FFF] to-[#FF7A59]">
             Intelligence
           </span>
         </h1>
-        <p className="mt-4 text-[#F0EEF6]/70 text-sm sm:text-base leading-relaxed px-2 font-light">
+        <p className="mt-4 text-[#4A4B63] text-sm sm:text-base leading-relaxed px-2 font-normal">
           Upload your PDF document to start an interactive, context-aware conversation powered by Gemini AI with verifiable source citations.
         </p>
       </div>
 
-      {/* Upload Glass Card */}
+      {/* Upload Glass Panel */}
       <div className="relative z-10 w-full max-w-md">
-        <div className="rounded-2xl glass-panel p-6 sm:p-8 transition-all duration-300 hover:border-[#C9A961]/30">
+        <div className="light-glass-panel p-6 sm:p-8 transition-all duration-300">
           <div
             id="pdf-drop-zone"
             role="button"
@@ -141,25 +142,25 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
             onClick={() => fileInputRef.current?.click()}
             onKeyDown={(e) => e.key === "Enter" && fileInputRef.current?.click()}
             className={`
-              relative flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed
+              relative flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed
               p-8 sm:p-10 cursor-pointer select-none transition-all duration-300
               ${
                 isDragging
-                  ? "border-[#C9A961] bg-[#C9A961]/10 scale-[1.01]"
+                  ? "border-[#4C6FFF] bg-[#4C6FFF]/10 scale-[1.01]"
                   : selectedFile
-                    ? "border-emerald-400/50 bg-emerald-500/5"
-                    : "border-white/15 hover:border-[#C9A961]/50 hover:bg-white/[0.03]"
+                    ? "border-emerald-500/60 bg-emerald-500/10"
+                    : "border-[#4C6FFF]/20 bg-white/40 hover:border-[#4C6FFF]/50 hover:bg-white/60"
               }
             `}
           >
             {selectedFile ? (
               <>
-                <CheckIcon className="w-8 h-8 text-emerald-400" />
+                <CheckIcon className="w-8 h-8 text-emerald-500" />
                 <div className="text-center min-w-0">
-                  <p className="text-[#F0EEF6] font-semibold text-sm leading-snug max-w-[240px] truncate mx-auto">
+                  <p className="text-[#1A1B2E] font-semibold text-sm leading-snug max-w-[240px] truncate mx-auto">
                     {selectedFile.name}
                   </p>
-                  <p className="text-[#F0EEF6]/50 text-xs mt-1">
+                  <p className="text-[#4A4B63] text-xs mt-1">
                     {formatBytes(selectedFile.size)} · Ready for extraction
                   </p>
                 </div>
@@ -170,22 +171,22 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
                     setSelectedFile(null);
                     setFileError(null);
                   }}
-                  className="text-xs text-[#C9A961] hover:underline underline-offset-2 transition-colors mt-1"
+                  className="text-xs text-[#4C6FFF] hover:underline underline-offset-2 transition-colors font-medium mt-1"
                 >
                   Choose a different file
                 </button>
               </>
             ) : (
               <>
-                <UploadIcon className="w-10 h-10 text-[#C9A961]" />
+                <UploadIcon className="w-10 h-10 text-[#4C6FFF]" />
                 <div className="text-center">
-                  <p className="text-[#F0EEF6] font-medium text-sm">
+                  <p className="text-[#1A1B2E] font-medium text-sm">
                     Drag and drop your PDF here, or{" "}
-                    <span className="text-[#C9A961] underline underline-offset-4 decoration-[#C9A961]/40">
+                    <span className="text-[#4C6FFF] font-semibold underline underline-offset-4 decoration-[#4C6FFF]/40">
                       browse
                     </span>
                   </p>
-                  <p className="text-[#F0EEF6]/40 text-xs mt-1.5">
+                  <p className="text-[#4A4B63]/70 text-xs mt-1.5 font-normal">
                     PDF files only · Up to {MAX_SIZE_MB} MB
                   </p>
                 </div>
@@ -219,33 +220,33 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
             disabled={!selectedFile || uploading}
             onClick={handleUpload}
             className={`
-              mt-5 w-full flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold tracking-wide
-              transition-all duration-300
+              mt-5 w-full flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold tracking-wide
+              transition-all duration-300 shadow-md
               ${
                 selectedFile && !uploading
-                  ? "bg-gradient-to-r from-[#C9A961] to-[#b08e45] text-[#0B0B1E] font-bold shadow-lg shadow-[#C9A961]/20 hover:shadow-[#C9A961]/35 hover:-translate-y-0.5 active:translate-y-0"
-                  : "bg-white/5 text-[#F0EEF6]/30 border border-white/5 cursor-not-allowed"
+                  ? "bg-[#4C6FFF] hover:bg-[#3B5BEB] text-white shadow-lg shadow-[#4C6FFF]/25 hover:shadow-[#4C6FFF]/40 hover:-translate-y-0.5 active:translate-y-0"
+                  : "bg-black/5 text-[#1A1B2E]/30 border border-black/5 cursor-not-allowed"
               }
             `}
           >
             {uploading ? (
               <>
                 <Spinner size="sm" />
-                <span>Processing Document…</span>
+                <span className="text-white">Processing Document…</span>
               </>
             ) : (
               <>
-                <PdfBadgeIcon className="w-4 h-4 text-[#0B0B1E]" />
+                <PdfBadgeIcon className="w-4 h-4 text-white" />
                 <span>Analyze Document</span>
               </>
             )}
           </button>
 
-          <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap gap-2 justify-center">
+          <div className="mt-6 pt-4 border-t border-[#1A1B2E]/10 flex flex-wrap gap-2 justify-center">
             {["PDF Parser", "Source Grounding", "Gemini AI"].map((tag) => (
               <span
                 key={tag}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-[#F0EEF6]/60 font-light"
+                className="rounded-full border border-[#4C6FFF]/20 bg-white/60 px-3 py-1 text-[11px] text-[#4A4B63] font-medium shadow-xs"
               >
                 {tag}
               </span>

@@ -24,9 +24,9 @@ export default function SourceBadge({
     activeSource?.msgId === msgId ? activeSource.chunkIndex : null;
 
   return (
-    <div className="mt-3 pt-2.5 border-t border-white/10 flex flex-col gap-2">
+    <div className="mt-3 pt-2.5 border-t border-[#1A1B2E]/10 flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-[11px] font-medium text-[#F0EEF6]/50 mr-1 select-none">
+        <span className="text-[11px] font-medium text-[#4A4B63] mr-1 select-none">
           Sources:
         </span>
         {sourceChunkIndexes.map((idx) => {
@@ -42,10 +42,10 @@ export default function SourceBadge({
                   onToggleSource({ msgId, chunkIndex: idx });
                 }
               }}
-              className={`px-2.5 py-1 rounded-md text-xs font-mono font-medium transition-all ${
+              className={`px-2.5 py-1 rounded-full text-xs font-mono font-medium transition-all ${
                 isSelected
-                  ? "bg-[#C9A961] text-[#0B0B1E] shadow-sm font-semibold"
-                  : "bg-[#C9A961]/10 text-[#C9A961] border border-[#C9A961]/20 hover:bg-[#C9A961]/20"
+                  ? "bg-[#4C6FFF] text-white shadow-sm shadow-[#4C6FFF]/30 font-semibold"
+                  : "bg-[#4C6FFF]/10 text-[#4C6FFF] border border-[#4C6FFF]/25 hover:bg-[#4C6FFF]/20"
               }`}
             >
               Source {idx}
@@ -55,21 +55,21 @@ export default function SourceBadge({
       </div>
 
       {currentActiveChunk !== null && (
-        <div className="mt-2 rounded-xl border border-[#C9A961]/30 bg-[#0B0B1E]/95 p-3.5 shadow-xl text-xs text-[#F0EEF6]/90 leading-relaxed font-sans backdrop-blur-md">
-          <div className="flex items-center justify-between text-[#C9A961] mb-2 font-semibold text-[11px]">
+        <div className="mt-2 rounded-2xl border border-[#4C6FFF]/30 bg-white/90 p-4 shadow-xl shadow-[#4C6FFF]/10 text-xs text-[#1A1B2E] leading-relaxed font-sans backdrop-blur-xl">
+          <div className="flex items-center justify-between text-[#4C6FFF] mb-2 font-semibold text-[11px]">
             <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#C9A961]" />
+              <span className="w-2 h-2 rounded-full bg-[#4C6FFF]" />
               Document Citation — Chunk {currentActiveChunk}
             </span>
             <button
               type="button"
               onClick={() => onToggleSource(null)}
-              className="text-[#F0EEF6]/40 hover:text-white transition-colors"
+              className="text-[#4A4B63] hover:text-[#1A1B2E] transition-colors"
             >
               ✕ Close
             </button>
           </div>
-          <div className="max-h-44 overflow-y-auto whitespace-pre-wrap pr-1.5 bg-black/40 rounded-lg p-3 border border-white/5 text-[#F0EEF6]/80 font-mono text-[11px] leading-normal break-words">
+          <div className="max-h-44 overflow-y-auto whitespace-pre-wrap pr-1.5 bg-[#F7F8FC] rounded-xl p-3 border border-[#4C6FFF]/15 text-[#4A4B63] font-mono text-[11px] leading-normal break-words">
             {docInfo.chunks[currentActiveChunk - 1] || "Source chunk text not available."}
           </div>
         </div>

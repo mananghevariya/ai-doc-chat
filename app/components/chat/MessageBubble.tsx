@@ -20,7 +20,6 @@ export default function MessageBubble({
 }: MessageBubbleProps) {
   const isUser = message.role === "user";
 
-  // Typewriter effect logic for fresh assistant messages
   const [displayedText, setDisplayedText] = useState(
     isUser || !message.isNew ? message.content : ""
   );
@@ -37,7 +36,6 @@ export default function MessageBubble({
       return;
     }
 
-    // Aim to finish entire animation in ~1.2 seconds max
     const intervalMs = Math.max(12, Math.min(45, 1200 / words.length));
     let currentIdx = 0;
 
@@ -63,26 +61,25 @@ export default function MessageBubble({
       >
         {/* Avatar */}
         <div
-          className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 shadow-md ${
+          className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm ${
             isUser
-              ? "bg-[#C9A961] text-[#0B0B1E] font-semibold"
-              : "bg-[#8B7FD6]/20 border border-[#8B7FD6]/30 text-[#8B7FD6]"
+              ? "bg-[#4C6FFF] text-white font-semibold"
+              : "bg-[#4C6FFF]/15 border border-[#4C6FFF]/25 text-[#4C6FFF]"
           }`}
         >
-          {isUser ? <UserIcon className="w-4 h-4" /> : <BotIcon className="w-4 h-4" />}
+          {isUser ? <UserIcon className="w-4 h-4 text-white" /> : <BotIcon className="w-4 h-4 text-[#4C6FFF]" />}
         </div>
 
         {/* Message Content Bubble */}
         <div
           className={`max-w-[85%] sm:max-w-[78%] rounded-2xl px-4 sm:px-5 py-3.5 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words transition-all ${
             isUser
-              ? "bg-gradient-to-r from-[#C9A961] to-[#b08e45] text-[#0B0B1E] font-medium rounded-tr-xs shadow-md shadow-[#C9A961]/10"
-              : "glass-panel text-[#F0EEF6] rounded-tl-xs shadow-xl"
+              ? "bg-[#4C6FFF] text-white font-medium rounded-tr-xs shadow-md shadow-[#4C6FFF]/20"
+              : "bg-white/85 border border-white text-[#1A1B2E] rounded-tl-xs shadow-xl shadow-[#4C6FFF]/5 backdrop-blur-xl"
           }`}
         >
           <div>{displayedText}</div>
 
-          {/* Sources component for assistant messages */}
           {!isUser && message.sourceChunkIndexes && (
             <SourceBadge
               msgId={message.id}

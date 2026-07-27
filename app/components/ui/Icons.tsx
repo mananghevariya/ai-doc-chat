@@ -1,6 +1,6 @@
 import React from "react";
 
-export function BotIcon({ className = "w-4 h-4" }: { className?: string }) {
+export function BotIcon({ className = "w-4 h-4 text-[#4C6FFF]" }: { className?: string }) {
   return (
     <svg
       className={className}
@@ -19,7 +19,7 @@ export function BotIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-export function UserIcon({ className = "w-4 h-4" }: { className?: string }) {
+export function UserIcon({ className = "w-4 h-4 text-[#4C6FFF]" }: { className?: string }) {
   return (
     <svg
       className={className}
@@ -38,7 +38,7 @@ export function UserIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-export function SendIcon({ className = "w-4 h-4" }: { className?: string }) {
+export function SendIcon({ className = "w-4 h-4 text-white" }: { className?: string }) {
   return (
     <svg
       className={className}
@@ -57,7 +57,7 @@ export function SendIcon({ className = "w-4 h-4" }: { className?: string }) {
   );
 }
 
-export function UploadIcon({ className = "w-10 h-10 text-[#C9A961]" }: { className?: string }) {
+export function UploadIcon({ className = "w-10 h-10 text-[#4C6FFF]" }: { className?: string }) {
   return (
     <svg
       className={className}
@@ -76,7 +76,7 @@ export function UploadIcon({ className = "w-10 h-10 text-[#C9A961]" }: { classNa
   );
 }
 
-export function PdfBadgeIcon({ className = "w-4 h-4 text-[#C9A961]" }: { className?: string }) {
+export function PdfBadgeIcon({ className = "w-4 h-4 text-[#4C6FFF]" }: { className?: string }) {
   return (
     <svg
       className={className}
@@ -89,7 +89,7 @@ export function PdfBadgeIcon({ className = "w-4 h-4 text-[#C9A961]" }: { classNa
   );
 }
 
-export function CheckIcon({ className = "w-5 h-5 text-emerald-400" }: { className?: string }) {
+export function CheckIcon({ className = "w-5 h-5 text-emerald-500" }: { className?: string }) {
   return (
     <svg
       className={className}
@@ -108,7 +108,7 @@ export function CheckIcon({ className = "w-5 h-5 text-emerald-400" }: { classNam
   );
 }
 
-export function SparklesIcon({ className = "w-4 h-4" }: { className?: string }) {
+export function SparklesIcon({ className = "w-4 h-4 text-[#FF7A59]" }: { className?: string }) {
   return (
     <svg
       className={className}

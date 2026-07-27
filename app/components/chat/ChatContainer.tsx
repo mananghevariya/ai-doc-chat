@@ -73,7 +73,7 @@ export default function ChatContainer({
           role: "assistant",
           content: json.answer,
           sourceChunkIndexes: json.sourceChunkIndexes,
-          isNew: true, // triggers typewriter animation for fresh answer
+          isNew: true,
         },
       ]);
     } catch {
@@ -85,28 +85,29 @@ export default function ChatContainer({
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative bg-gradient-to-br from-[#0B0B1E] via-[#0F0F2D] to-[#14142B] text-[#F0EEF6] font-sans">
-      {/* Ambient background glow to match UploadZone hero */}
+    <div className="min-h-screen flex flex-col relative bg-[#F7F8FC] text-[#1A1B2E] font-sans">
+      {/* Animated Light Liquid Glass Floating Blobs (Identical to UploadZone for seamless design) */}
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 flex items-center justify-center overflow-hidden"
+        className="pointer-events-none fixed inset-0 overflow-hidden"
       >
-        <div className="w-[700px] h-[700px] rounded-full bg-[#8B7FD6]/5 blur-[140px]" />
-        <div className="w-[400px] h-[400px] rounded-full bg-[#C9A961]/5 blur-[100px] absolute" />
+        <div className="animate-blob-1 absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-[#4C6FFF]/15 blur-3xl" />
+        <div className="animate-blob-2 absolute bottom-1/4 right-1/4 w-[480px] h-[480px] rounded-full bg-[#9B7FFF]/15 blur-3xl" />
+        <div className="animate-blob-3 absolute top-1/2 right-1/3 w-[380px] h-[380px] rounded-full bg-[#FF7A59]/10 blur-3xl" />
       </div>
 
       {/* Top Glass Header */}
-      <header className="shrink-0 z-20 sticky top-0 border-b border-white/10 bg-[#0B0B1E]/80 backdrop-blur-xl px-4 py-3 sm:py-4 shadow-lg">
+      <header className="shrink-0 z-20 sticky top-0 border-b border-white/80 bg-white/70 backdrop-blur-xl px-4 py-3 sm:py-4 shadow-sm shadow-[#4C6FFF]/5">
         <div className="mx-auto max-w-4xl flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#C9A961]/15 border border-[#C9A961]/30 flex items-center justify-center shrink-0 shadow-md">
-              <BotIcon className="w-5 h-5 text-[#C9A961]" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#4C6FFF]/15 border border-[#4C6FFF]/25 flex items-center justify-center shrink-0 shadow-xs">
+              <BotIcon className="w-5 h-5 text-[#4C6FFF]" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-white text-xs sm:text-sm font-serif font-bold leading-tight truncate max-w-[180px] sm:max-w-xs">
+              <h2 className="text-[#1A1B2E] text-xs sm:text-sm font-serif font-bold leading-tight truncate max-w-[180px] sm:max-w-xs">
                 {docInfo.fileName}
               </h2>
-              <p className="text-[#F0EEF6]/50 text-[11px] sm:text-xs mt-0.5 font-light">
+              <p className="text-[#4A4B63] text-[11px] sm:text-xs mt-0.5 font-normal">
                 {docInfo.pageCount} page{docInfo.pageCount !== 1 ? "s" : ""} · ~
                 {docInfo.wordCount.toLocaleString()} words · {docInfo.chunks.length} chunks
               </p>
@@ -117,7 +118,7 @@ export default function ChatContainer({
             id="upload-new-btn"
             type="button"
             onClick={onReset}
-            className="shrink-0 flex items-center gap-1.5 rounded-xl border border-[#C9A961]/40 bg-[#C9A961]/10 px-3.5 py-1.5 text-xs font-semibold text-[#C9A961] hover:bg-[#C9A961]/20 hover:border-[#C9A961]/60 shadow-sm transition-all duration-200"
+            className="shrink-0 flex items-center gap-1.5 rounded-full border border-[#4C6FFF]/30 bg-[#4C6FFF]/10 px-4 py-1.5 text-xs font-semibold text-[#4C6FFF] hover:bg-[#4C6FFF]/20 transition-all duration-200 shadow-xs"
           >
             <svg
               className="w-3.5 h-3.5"
@@ -164,7 +165,7 @@ export default function ChatContainer({
       </main>
 
       {/* Sticky Glass Footer Input */}
-      <div className="shrink-0 sticky bottom-0 border-t border-white/10 bg-[#0B0B1E]/85 backdrop-blur-xl px-4 py-4 sm:py-5 z-20">
+      <div className="shrink-0 sticky bottom-0 border-t border-white/80 bg-white/75 backdrop-blur-xl px-4 py-4 sm:py-5 z-20">
         <form
           id="chat-form"
           onSubmit={handleSend}
@@ -179,25 +180,25 @@ export default function ChatContainer({
             placeholder="Ask a question about your PDF document…"
             disabled={chatLoading}
             autoFocus
-            className="flex-1 rounded-xl border border-white/10 bg-white/[0.05] px-4 sm:px-5 py-3 text-xs sm:text-sm text-[#F0EEF6] placeholder-[#F0EEF6]/40 outline-none transition-all focus:border-[#C9A961]/50 focus:ring-2 focus:ring-[#C9A961]/20 disabled:opacity-50"
+            className="flex-1 rounded-2xl border border-white bg-white/80 px-4 sm:px-5 py-3.5 text-xs sm:text-sm text-[#1A1B2E] placeholder-[#4A4B63]/50 outline-none transition-all shadow-xs focus:border-[#4C6FFF]/60 focus:ring-2 focus:ring-[#4C6FFF]/20 disabled:opacity-50 font-normal"
           />
           <button
             id="send-message-btn"
             type="submit"
             disabled={!inputValue.trim() || chatLoading}
             className={`
-              flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-xl transition-all duration-300 shrink-0
+              flex items-center justify-center w-11 h-11 sm:w-12 sm:h-12 rounded-2xl transition-all duration-300 shrink-0 shadow-md
               ${
                 inputValue.trim() && !chatLoading
-                  ? "bg-gradient-to-r from-[#C9A961] to-[#b08e45] text-[#0B0B1E] font-bold shadow-md shadow-[#C9A961]/20 hover:shadow-[#C9A961]/35 hover:-translate-y-0.5 active:translate-y-0"
-                  : "bg-white/5 text-[#F0EEF6]/30 cursor-not-allowed"
+                  ? "bg-[#4C6FFF] hover:bg-[#3B5BEB] text-white shadow-lg shadow-[#4C6FFF]/25 hover:shadow-[#4C6FFF]/40 hover:-translate-y-0.5 active:translate-y-0"
+                  : "bg-black/5 text-[#1A1B2E]/30 cursor-not-allowed border border-black/5"
               }
             `}
           >
-            {chatLoading ? <Spinner size="sm" /> : <SendIcon className="w-4 h-4" />}
+            {chatLoading ? <Spinner size="sm" /> : <SendIcon className="w-4 h-4 text-white" />}
           </button>
         </form>
-        <p className="mt-2.5 text-center text-[#F0EEF6]/40 text-[11px] font-light">
+        <p className="mt-2.5 text-center text-[#4A4B63]/60 text-[11px] font-normal">
           Gemini answers are grounded in your PDF document. Click Source citations to inspect text chunks.
         </p>
       </div>
