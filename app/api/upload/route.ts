@@ -103,11 +103,7 @@ export async function POST(req: NextRequest) {
     console.error("==================================");
 
     return NextResponse.json(
-      {
-        error: `Failed to process the PDF: ${err?.message || String(err)}`,
-        details: String(err?.message || err),
-        stack: String(err?.stack || ""),
-      },
+      { error: "Failed to process the PDF document. Please try again." },
       { status: 500 }
     );
   }

@@ -163,8 +163,7 @@ JSON RESPONSE:`;
     if (lastError || !rawText) {
       return NextResponse.json(
         {
-          error: `Gemini API Error: ${lastError?.message || "All candidate models failed."}`,
-          status: lastError?.status || 500,
+          error: "Failed to get a response from the AI. Please try again.",
         },
         { status: 500 }
       );
@@ -177,7 +176,7 @@ JSON RESPONSE:`;
     console.error("========== GENERAL /api/chat ERROR ==========");
     console.error(err);
     return NextResponse.json(
-      { error: err?.message || "Failed to get a response from the AI. Please try again." },
+      { error: "Failed to process your request. Please try again." },
       { status: 500 }
     );
   }
