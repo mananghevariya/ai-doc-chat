@@ -143,15 +143,6 @@ export default function MessageBubble({
         {!isUser && (
           <div className="msg-footer">
             <div>
-              {message.sourceChunkIndexes && (
-                <SourceBadge
-                  msgId={message.id}
-                  sourceChunkIndexes={message.sourceChunkIndexes}
-                  docInfo={docInfo}
-                  activeSource={activeSource}
-                  onToggleSource={onToggleSource}
-                />
-              )}
             </div>
             <button className="copy-btn" onClick={handleCopy} title="Copy">
               {copied ? (

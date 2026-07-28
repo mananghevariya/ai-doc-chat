@@ -155,11 +155,7 @@ export default function ChatContainer({
         {/* Right: Actions */}
         <div className="header-actions">
           <button id="add-doc-btn" className="header-btn accent" disabled={addingDoc} onClick={() => addDocInputRef.current?.click()}>
-            {addingDoc ? <SpinnerTeal size="sm" /> : (
-              <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-            )}
+            {addingDoc && <SpinnerTeal size="sm" />}
             <span>{addingDoc ? "Adding…" : "+ PDF"}</span>
           </button>
 

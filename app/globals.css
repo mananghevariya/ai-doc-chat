@@ -352,3 +352,13 @@ html, body {
   background: #FFFFFF; border: 1px solid #E8EAED; border-radius: 20px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.06);
 }
+
+/* Mobile Adjustments */
+@media (max-width: 600px) {
+  .app-header { padding: 0 10px; }
+  .header-brand-sub { display: none; }
+  .header-docs { display: none; }
+  .header-btn span { display: none; }
+  .header-btn { padding: 6px 8px; }
+  .stats-bar { font-size: 9px; gap: 10px; }
+}
