@@ -9,9 +9,12 @@ Chat with your PDF documents using AI. Upload a document, ask questions, and get
 
 ## Features
 
+- 📚 **Multi-Document Support** — analyze up to 3 PDFs simultaneously with cross-document source citations
+- ⚡ **Suggested Questions** — quick-action buttons (Summarize, Key Takeaways, Important Details, Main Topics) for instant insights
+- 🔄 **Intelligent Model Fallback** — automatically retries across multiple Gemini model versions for reliability
 - 📄 **PDF Upload & Parsing** — extracts and chunks text from uploaded PDFs (up to 10 MB / ~10 pages)
-- 💬 **AI-Powered Q&A** — ask natural language questions, get answers grounded strictly in the document
-- 🔍 **Source Citations** — click a source badge to see the exact passage the answer came from
+- 💬 **AI-Powered Q&A** — ask natural language questions, get answers grounded strictly in the documents
+- 🔍 **Source Citations** — click a source badge to see exactly which document and chunk the answer came from
 - 💾 **Persistent Sessions** — conversations are saved locally and restored on reload
 - ⌨️ **Typewriter Response Animation** — smooth, readable answer reveal
 - 📱 **Fully Responsive** — works cleanly on mobile, tablet, and desktop

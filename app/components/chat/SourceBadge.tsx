@@ -27,15 +27,22 @@ export default function SourceBadge({
         <span style={{ fontSize: "11px", fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>
           Sources:
         </span>
-        {sourceChunkIndexes.map((idx) => (
-          <button
-            key={idx}
-            className={`src-btn ${currentActive === idx ? "active" : ""}`}
-            onClick={() => onToggleSource(currentActive === idx ? null : { msgId, chunkIndex: idx })}
-          >
-            #{idx}
-          </button>
-        ))}
+        {sourceChunkIndexes.map((idx) => {
+          const chunkText = docInfo.chunks[idx - 1] || "";
+          const docMatch = chunkText.match(/^\[Document: (.*?)\]\n/);
+          let docName = docMatch ? docMatch[1] : "";
+          if (docName.length > 15) docName = docName.substring(0, 12) + "...";
+          
+          return (
+            <button
+              key={idx}
+              className={`src-btn ${currentActive === idx ? "active" : ""}`}
+              onClick={() => onToggleSource(currentActive === idx ? null : { msgId, chunkIndex: idx })}
+            >
+              {docName ? `${docName} #${idx}` : `#${idx}`}
+            </button>
+          );
+        })}
       </div>
 
       {currentActive !== null && (
@@ -47,7 +54,7 @@ export default function SourceBadge({
                 background: "linear-gradient(135deg, #667eea, #764ba2)"
               }} />
               <span style={{ fontSize: "11px", fontWeight: 700, color: "#6d28d9", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Chunk {currentActive}
+                Source {currentActive}
               </span>
             </div>
             <button
@@ -68,7 +75,7 @@ export default function SourceBadge({
             background: "white", borderRadius: "8px", padding: "12px",
             border: "1px solid #e5e7eb"
           }}>
-            {docInfo.chunks[currentActive - 1] || "Source chunk not available."}
+            {(docInfo.chunks[currentActive - 1] || "Source chunk not available.").replace(/^\[Document: .*?\]\n/, "")}
           </div>
         </div>
       )}

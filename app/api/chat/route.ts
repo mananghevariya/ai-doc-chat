@@ -114,15 +114,20 @@ export async function POST(req: NextRequest) {
       "gemini-2.0-flash",
     ];
 
-    const slicedChunks = documentChunks.slice(0, 50);
+    const slicedChunks = documentChunks.slice(0, 60);
     const indexedContext = slicedChunks
-      .map((chunk, idx) => `[Chunk ${idx + 1}]\n${chunk}`)
+      .map((chunk, idx) => {
+        const docMatch = chunk.match(/^\[Document: (.*?)\]\n/);
+        const docName = docMatch ? docMatch[1] : "Unknown Document";
+        const cleanChunk = chunk.replace(/^\[Document: .*?\]\n/, "");
+        return `[Document: ${docName}, Chunk ${idx + 1}]\n${cleanChunk}`;
+      })
       .join("\n\n---\n\n");
 
     const prompt = `You are a precise multi-document AI assistant. Your sole job is to answer the user's question based strictly on the document context provided below.
 
 Context format:
-Each chunk below starts with [Chunk X] and contains origin tags like [Document: filename.pdf].
+Each chunk below starts with [Document: filename, Chunk X].
 
 Rules you must follow:
 1. Answer ONLY using information from the provided context. Do not use any external knowledge.

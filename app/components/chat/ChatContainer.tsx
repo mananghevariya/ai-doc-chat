@@ -82,14 +82,27 @@ export default function ChatContainer({
 
   const handleAddDocumentFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return; e.target.value = "";
+    
+    const existingDocs = docInfo.documents?.length ? docInfo.documents : [{ id: uid(), fileName: docInfo.fileName, fileSize: docInfo.fileSize || "1 MB", pageCount: docInfo.pageCount, wordCount: docInfo.wordCount, chunks: docInfo.chunks }];
+    
+    if (existingDocs.length >= 3) { setAddDocError("Maximum of 3 documents reached."); return; }
+    
     if (file.type !== "application/pdf") { setAddDocError("Only PDF files are supported."); return; }
     if (file.size > 10 * 1024 * 1024) { setAddDocError("File size exceeds 10 MB."); return; }
+    
     setAddDocError(null); setAddingDoc(true);
     const fd = new FormData(); fd.append("file", file);
     try {
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       const json = await res.json();
       if (!res.ok) { setAddDocError(json.error ?? "Upload failed."); return; }
+      
+      const currentTotalChunks = docInfo.chunks.length;
+      if (currentTotalChunks + json.chunks.length > 60) {
+        setAddDocError(`Adding this document exceeds the maximum 60 chunks allowed for AI context. (Currently: ${currentTotalChunks})`);
+        return;
+      }
+
       const tagged = json.chunks.map((c: string) => `[Document: ${file.name}]\n${c}`);
       const newDoc: DocumentItem = { id: uid(), fileName: file.name, fileSize: formatBytes(file.size), pageCount: json.pageCount, wordCount: json.wordCount, chunks: tagged };
       const existing = docInfo.documents?.length ? docInfo.documents : [{ id: uid(), fileName: docInfo.fileName, fileSize: docInfo.fileSize || "1 MB", pageCount: docInfo.pageCount, wordCount: docInfo.wordCount, chunks: docInfo.chunks }];
