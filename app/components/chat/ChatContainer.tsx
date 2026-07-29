@@ -63,19 +63,96 @@ export default function ChatContainer({
   const sendQuestion = async (q: string) => {
     const question = q.trim();
     if (!question || chatLoading || addingDoc) return;
-    setInputValue(""); setChatError(null);
+    
+    setInputValue(""); 
+    setChatError(null);
     setMessages((p) => [...p, { id: uid(), role: "user", content: question }]);
+    
+    const msgId = uid();
     setChatLoading(true);
+    
     try {
       const res = await fetch("/api/chat", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", 
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question, documentChunks: docInfo.chunks }),
       });
-      const json: ChatResponse = await res.json();
-      if (!res.ok) { setChatError(json.error ?? "Failed to generate a response."); return; }
-      setMessages((p) => [...p, { id: uid(), role: "assistant", content: json.answer, sourceChunkIndexes: json.sourceChunkIndexes, isNew: true }]);
-    } catch { setChatError("Network error. Please try again."); }
-    finally { setChatLoading(false); setTimeout(() => inputRef.current?.focus(), 60); }
+      
+      if (!res.ok) { 
+        const json = await res.json().catch(() => ({}));
+        setChatError(json.error ?? "Failed to generate a response."); 
+        setChatLoading(false);
+        return; 
+      }
+      
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No readable stream available.");
+      
+      const decoder = new TextDecoder();
+      let accumulated = "";
+      let done = false;
+      let hasSources = false;
+      let answerText = "";
+      let firstChunkReceived = false;
+      
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+        
+        if (value) {
+          accumulated += decoder.decode(value, { stream: !done });
+          
+          if (!firstChunkReceived) {
+            firstChunkReceived = true;
+            setChatLoading(false);
+            setMessages((p) => [...p, { id: msgId, role: "assistant", content: accumulated, isNew: true }]);
+          }
+          
+          if (!hasSources) {
+            const splitIdx = accumulated.indexOf("===SOURCES===");
+            if (splitIdx !== -1) {
+              hasSources = true;
+              answerText = accumulated.substring(0, splitIdx).trim();
+              setMessages((p) => p.map(m => m.id === msgId ? { ...m, content: answerText } : m));
+            } else {
+              setMessages((p) => p.map(m => m.id === msgId ? { ...m, content: accumulated } : m));
+            }
+          }
+        }
+      }
+      
+      if (!firstChunkReceived) {
+         setChatLoading(false);
+         setMessages((p) => [...p, { id: msgId, role: "assistant", content: "No response generated.", isNew: true }]);
+      }
+      
+      // End of stream - Parse sources if they exist
+      if (hasSources) {
+        const splitIdx = accumulated.indexOf("===SOURCES===");
+        const sourceStr = accumulated.substring(splitIdx + "===SOURCES===".length).trim();
+        try {
+          // Clean markdown code blocks just in case
+          let cleanStr = sourceStr.replace(/```json/g, "").replace(/```/g, "").trim();
+          const match = cleanStr.match(/\[([\d\s,]*)\]/);
+          let indexes: number[] = [];
+          if (match && match[1]) {
+            indexes = match[1].split(",").map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+          } else {
+            indexes = JSON.parse(cleanStr);
+          }
+          setMessages((p) => p.map(m => m.id === msgId ? { ...m, sourceChunkIndexes: indexes } : m));
+        } catch (e) {
+          console.error("Failed to parse sources:", sourceStr);
+          // If parsing fails, we still have the valid answerText, just no sources.
+        }
+      }
+      
+    } catch { 
+      setChatError("Network error. Please try again."); 
+      setChatLoading(false);
+    } finally { 
+      setTimeout(() => inputRef.current?.focus(), 60); 
+    }
   };
 
   const handleSend = (e: FormEvent) => { e.preventDefault(); sendQuestion(inputValue); };

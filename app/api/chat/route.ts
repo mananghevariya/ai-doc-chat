@@ -3,74 +3,6 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const runtime = "nodejs";
 
-function extractAnswerByRegex(text: string): string | null {
-  const match = text.match(/["']answer["']\s*:\s*"((?:[^"\\]|\\[\s\S])*)"/);
-  if (match && match[1]) {
-    return match[1]
-      .replace(/\\"/g, '"')
-      .replace(/\\n/g, "\n")
-      .replace(/\\\\/g, "\\");
-  }
-  return null;
-}
-
-function extractSourcesByRegex(text: string): number[] {
-  const match = text.match(/["']sourceChunkIndexes["']\s*:\s*\[([\d\s,]*)]/);
-  if (match && match[1]) {
-    return match[1]
-      .split(",")
-      .map((s) => parseInt(s.trim(), 10))
-      .filter((n) => !isNaN(n) && n > 0);
-  }
-  return [];
-}
-
-function parseAiResponse(rawText: string): { answer: string; sourceChunkIndexes: number[] } {
-  let cleaned = rawText.trim();
-
-  // Strip markdown code fences if present
-  if (cleaned.startsWith("```")) {
-    cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-  }
-
-  // Attempt 1: Standard JSON parse
-  try {
-    const parsed = JSON.parse(cleaned);
-    if (parsed && typeof parsed.answer === "string") {
-      const sourceChunkIndexes = Array.isArray(parsed.sourceChunkIndexes)
-        ? parsed.sourceChunkIndexes
-            .map((n: any) => Number(n))
-            .filter((n: number) => !isNaN(n) && n > 0)
-        : [];
-      return { answer: parsed.answer.trim(), sourceChunkIndexes };
-    }
-  } catch {
-    // Proceed to fallback extractions
-  }
-
-  // Attempt 2: Regex extraction
-  const regexAnswer = extractAnswerByRegex(cleaned);
-  const regexSources = extractSourcesByRegex(cleaned);
-
-  if (regexAnswer) {
-    return { answer: regexAnswer.trim(), sourceChunkIndexes: regexSources };
-  }
-
-  // Attempt 3: If text starts with '{' and contains JSON structure, sanitize
-  if (cleaned.startsWith("{") && cleaned.includes("answer")) {
-    const sanitized = cleaned
-      .replace(/\{?\s*"answer"\s*:\s*"/i, "")
-      .replace(/",?\s*"sourceChunkIndexes"\s*:\s*\[[\d\s,]*\]\s*\}?/i, "")
-      .replace(/["']?\s*\}?\s*$/i, "")
-      .trim();
-    if (sanitized) {
-      return { answer: sanitized, sourceChunkIndexes: regexSources };
-    }
-  }
-
-  return { answer: cleaned, sourceChunkIndexes: [] };
-}
-
 export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as {
@@ -134,12 +66,8 @@ Rules you must follow:
 2. If the user asks about a specific document (e.g., "this document", "the new document", "Drashtin's resume", or a specific file name), focus your answer on that specific document.
 3. If the user asks a general question (e.g., "what is in these documents?"), synthesize information across all relevant documents and clearly state which document each detail comes from.
 4. Identify which Chunk number(s) (e.g., 1, 2) were directly used to answer the question.
-5. If the answer is not in the context, set answer to: "I couldn't find that information in the provided document(s)." and set sourceChunkIndexes to [].
-6. Output strictly as JSON matching this schema:
-{
-  "answer": "Your clear, concise answer...",
-  "sourceChunkIndexes": [1, 2]
-}
+5. If the answer is not in the context, say exactly: "I couldn't find that information in the provided document(s)."
+6. ALWAYS append exactly "===SOURCES===" on a new line at the very end of your answer, followed immediately by a JSON array of the Chunk numbers you directly used (e.g., [1, 2]). If you didn't use any chunks, output []. Do not include the word "chunk" inside the array, only the numbers.
 
 DOCUMENT CONTEXT:
 ---
@@ -148,20 +76,16 @@ ${indexedContext}
 
 USER QUESTION: ${question.trim()}
 
-JSON RESPONSE:`;
+ANSWER:`;
 
-    let rawText = "";
+    let streamResult: any = null;
     let lastError: any = null;
 
     for (const modelName of candidateModels) {
       try {
-        console.log(`[/api/chat] Requesting structured answer from '${modelName}'...`);
-        const model = genAI.getGenerativeModel({
-          model: modelName,
-          generationConfig: { responseMimeType: "application/json" },
-        });
-        const result = await model.generateContent(prompt);
-        rawText = result.response.text();
+        console.log(`[/api/chat] Requesting streaming answer from '${modelName}'...`);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        streamResult = await model.generateContentStream(prompt);
         lastError = null;
         break;
       } catch (err: any) {
@@ -170,7 +94,7 @@ JSON RESPONSE:`;
       }
     }
 
-    if (lastError || !rawText) {
+    if (lastError || !streamResult) {
       return NextResponse.json(
         {
           error: "Failed to get a response from the AI. Please try again.",
@@ -179,9 +103,28 @@ JSON RESPONSE:`;
       );
     }
 
-    const { answer, sourceChunkIndexes } = parseAiResponse(rawText);
+    // Stream the response back to the client natively
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of streamResult.stream) {
+            controller.enqueue(new TextEncoder().encode(chunk.text()));
+          }
+        } catch (err) {
+          console.error("Stream reading error", err);
+          controller.error(err);
+        } finally {
+          controller.close();
+        }
+      },
+    });
 
-    return NextResponse.json({ answer, sourceChunkIndexes });
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache",
+      },
+    });
   } catch (err: any) {
     console.error("========== GENERAL /api/chat ERROR ==========");
     console.error(err);

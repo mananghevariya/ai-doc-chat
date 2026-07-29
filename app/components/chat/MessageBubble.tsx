@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { ActiveSource, DocInfo, Message } from "@/app/types";
 import { BotIcon, UserIcon } from "../ui/Icons";
 import SourceBadge from "./SourceBadge";
+import ReactMarkdown from "react-markdown";
 
 interface MessageBubbleProps {
   message: Message;
@@ -12,81 +13,58 @@ interface MessageBubbleProps {
   onToggleSource: (source: ActiveSource | null) => void;
 }
 
-function parseInlineMarkdown(text: string, isUser: boolean): React.ReactNode[] {
-  const regex = /(\*\*(.*?)\*\*|\*(.*?)\*|`(.*?)`)/g;
-  const parts: React.ReactNode[] = [];
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-
-  while ((match = regex.exec(text)) !== null) {
-    if (match.index > lastIndex) parts.push(text.substring(lastIndex, match.index));
-
-    const fullMatch = match[0];
-    if (fullMatch.startsWith("**") && fullMatch.endsWith("**")) {
-      parts.push(
-        <strong key={match.index} style={{ fontWeight: 600, color: isUser ? "rgba(255,255,255,0.95)" : "#111827" }}>
-          {match[2]}
-        </strong>
-      );
-    } else if (fullMatch.startsWith("*") && fullMatch.endsWith("*")) {
-      parts.push(<em key={match.index}>{match[3]}</em>);
-    } else if (fullMatch.startsWith("`") && fullMatch.endsWith("`")) {
-      parts.push(
-        <code
-          key={match.index}
-          style={{
-            background: isUser ? "rgba(255,255,255,0.2)" : "#f3f4f6",
-            color: isUser ? "white" : "#6d28d9",
-            borderRadius: "4px",
-            padding: "1px 6px",
-            fontFamily: "monospace",
-            fontSize: "12px",
-            border: isUser ? "none" : "1px solid #e5e7eb",
-          }}
-        >
-          {match[4]}
-        </code>
-      );
-    }
-
-    lastIndex = regex.lastIndex;
-  }
-
-  if (lastIndex < text.length) parts.push(text.substring(lastIndex));
-  return parts.length > 0 ? parts : [text];
-}
-
-function renderMarkdown(text: string, isUser: boolean) {
+function renderUserMessage(text: string) {
   if (!text) return null;
-  const lines = text.split("\n");
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-      {lines.map((line, i) => {
-        const trimmed = line.trim();
-        if (!trimmed) return <div key={i} style={{ height: "6px" }} />;
-
-        const isBullet = /^[*-]\s+/.test(trimmed);
-        const content = isBullet ? trimmed.replace(/^[*-]\s+/, "") : line;
-        const parsed = parseInlineMarkdown(content, isUser);
-
-        if (isBullet) {
-          return (
-            <div key={i} style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-              <span style={{
-                width: "6px", height: "6px", borderRadius: "50%",
-                background: isUser ? "rgba(255,255,255,0.7)" : "#667eea",
-                flexShrink: 0, marginTop: "8px"
-              }} />
-              <div style={{ flex: 1, lineHeight: "1.7" }}>{parsed}</div>
-            </div>
-          );
-        }
-        return <div key={i} style={{ lineHeight: "1.7" }}>{parsed}</div>;
-      })}
+      {text.split("\n").map((line, i) => (
+        <div key={i} style={{ lineHeight: "1.7", whiteSpace: "pre-wrap" }}>
+          {line}
+        </div>
+      ))}
     </div>
   );
 }
+
+const markdownComponents = {
+  h1: ({ node, ...props }: any) => <h1 style={{ fontSize: "1.25rem", fontWeight: 700, marginTop: "1.25rem", marginBottom: "0.5rem", color: "#111827" }} {...props} />,
+  h2: ({ node, ...props }: any) => <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginTop: "1rem", marginBottom: "0.5rem", color: "#111827" }} {...props} />,
+  h3: ({ node, ...props }: any) => <h3 style={{ fontSize: "1rem", fontWeight: 600, marginTop: "1rem", marginBottom: "0.5rem", color: "#111827" }} {...props} />,
+  p: ({ node, ...props }: any) => <p style={{ marginBottom: "0.5rem", lineHeight: "1.7" }} {...props} />,
+  ul: ({ node, ...props }: any) => <ul style={{ margin: "0.5rem 0", paddingLeft: "1.5rem", listStyleType: "disc" }} {...props} />,
+  ol: ({ node, ...props }: any) => <ol style={{ margin: "0.5rem 0", paddingLeft: "1.5rem", listStyleType: "decimal" }} {...props} />,
+  li: ({ node, ...props }: any) => <li style={{ marginBottom: "0.25rem", lineHeight: "1.7" }} {...props} />,
+  strong: ({ node, ...props }: any) => <strong style={{ fontWeight: 700, color: "#111827" }} {...props} />,
+  em: ({ node, ...props }: any) => <em style={{ fontStyle: "italic" }} {...props} />,
+  code: ({ node, inline, ...props }: any) => (
+    <code
+      style={{
+        background: "#f3f4f6",
+        color: "#6d28d9",
+        borderRadius: "4px",
+        padding: "2px 6px",
+        fontFamily: "monospace",
+        fontSize: "12px",
+        border: "1px solid #e5e7eb",
+      }}
+      {...props}
+    />
+  ),
+  pre: ({ node, ...props }: any) => (
+    <pre
+      style={{
+        overflowX: "auto",
+        padding: "12px",
+        background: "#1f2937",
+        color: "#f3f4f6",
+        borderRadius: "8px",
+        margin: "12px 0",
+        fontSize: "12px",
+      }}
+      {...props}
+    />
+  ),
+};
 
 export default function MessageBubble({
   message,
@@ -96,28 +74,6 @@ export default function MessageBubble({
 }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const [copied, setCopied] = useState(false);
-  const [displayedText, setDisplayedText] = useState(
-    isUser || !message.isNew ? message.content : ""
-  );
-
-  useEffect(() => {
-    if (isUser || !message.isNew || !message.content) {
-      setDisplayedText(message.content);
-      return;
-    }
-    const words = message.content.split(" ");
-    if (words.length <= 1) { setDisplayedText(message.content); return; }
-
-    const intervalMs = Math.max(10, Math.min(40, 1000 / words.length));
-    let idx = 0;
-    const timer = setInterval(() => {
-      idx++;
-      if (idx >= words.length) { setDisplayedText(message.content); clearInterval(timer); }
-      else setDisplayedText(words.slice(0, idx).join(" "));
-    }, intervalMs);
-
-    return () => clearInterval(timer);
-  }, [message.content, message.isNew, isUser]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
@@ -137,10 +93,16 @@ export default function MessageBubble({
 
       {/* Bubble */}
       <div className={isUser ? "bubble-user" : "bubble-ai"}>
-        {renderMarkdown(displayedText, isUser)}
+        {isUser ? (
+          renderUserMessage(message.content)
+        ) : (
+          <ReactMarkdown components={markdownComponents}>
+            {message.content}
+          </ReactMarkdown>
+        )}
 
         {/* AI footer */}
-        {!isUser && (
+        {!isUser && message.content && (
           <div className="msg-footer">
             <div>
             </div>
