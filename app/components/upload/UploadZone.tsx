@@ -2,8 +2,7 @@
 
 import React, { useState, useRef, useCallback } from "react";
 import { DocInfo, DocumentItem } from "@/app/types";
-import { UploadIcon, PdfBadgeIcon, CheckIcon, SparklesIcon } from "../ui/Icons";
-import { Spinner, ErrorBanner } from "../ui/Feedback";
+import { SpinnerTeal, ErrorBanner } from "../ui/Feedback";
 
 interface UploadZoneProps {
   onUploadSuccess: (info: DocInfo) => void;
@@ -107,7 +106,7 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
       };
       
       setUploadedDocs(prev => [...prev, docItem]);
-      setSelectedFile(null); // Reset for next file
+      setSelectedFile(null);
     } catch { 
       setUploadError("Network connection error. Please try again."); 
     } finally { 
@@ -122,7 +121,7 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
     const totalPages = uploadedDocs.reduce((sum, d) => sum + d.pageCount, 0);
     const totalWords = uploadedDocs.reduce((sum, d) => sum + d.wordCount, 0);
     const name = uploadedDocs.length === 1 ? uploadedDocs[0].fileName : `${uploadedDocs.length} Documents`;
-    const size = uploadedDocs[0].fileSize; // Representative size or could sum
+    const size = uploadedDocs[0].fileSize;
     
     onUploadSuccess({ 
       documents: uploadedDocs, 
@@ -143,56 +142,54 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
   const chunksLimitReached = currentTotalChunks >= MAX_CHUNKS;
 
   return (
-    <div className="upload-root" style={{ minHeight: "100vh", padding: "40px 20px" }}>
-      <div style={{ position: "relative", zIndex: 2, width: "100%", display: "flex", flexDirection: "column", alignItems: "center", maxWidth: "600px", margin: "0 auto" }}>
+    <div className="min-h-screen bg-background relative flex items-center justify-center p-4 overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none -z-10">
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-secondary-fixed opacity-30 blur-3xl"></div>
+        <div className="absolute top-1/4 -right-40 w-[500px] h-[500px] rounded-full bg-tertiary-fixed opacity-20 blur-3xl"></div>
+        <div className="absolute -bottom-40 left-1/3 w-[700px] h-[400px] rounded-full bg-primary-fixed opacity-30 blur-3xl"></div>
+      </div>
 
-        {/* Badge */}
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: "6px",
-          background: "#EFF6FF", border: "1px solid #BFDBFE",
-          borderRadius: "999px", padding: "5px 14px",
-          fontSize: "11px", fontWeight: 700, color: "#1D4ED8",
-          textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "20px"
-        }}>
-          <SparklesIcon className="w-3.5 h-3.5" style={{ color: "#0EA5E9" }} />
-          <span>Document Intelligence · Gemini AI</span>
+      <div className="relative z-10 w-full max-w-2xl flex flex-col items-center">
+        
+        <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary-fixed text-primary font-label-md text-label-md font-bold uppercase tracking-widest mb-8 shadow-sm">
+          <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
+          <span>DocuMind AI</span>
         </div>
 
-        {/* Hero */}
-        <div style={{ textAlign: "center", marginBottom: "30px" }}>
-          <h1 style={{ fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 800, color: "#111827", lineHeight: 1.2, letterSpacing: "-0.025em", marginBottom: "12px" }}>
-            Chat with Your{" "}
-            <span className="gradient-text">PDF Documents</span>
+        <div className="text-center mb-10">
+          <h1 className="font-display text-display text-on-surface mb-4">
+            Chat with Your Documents
           </h1>
-          <p style={{ color: "#6B7280", fontSize: "15px", lineHeight: 1.65, fontWeight: 400, maxWidth: "420px", margin: "0 auto" }}>
+          <p className="font-body-lg text-body-lg text-on-surface-variant max-w-md mx-auto">
             Upload up to {MAX_DOCS} PDFs to analyze them simultaneously and get AI-powered answers with exact source citations.
           </p>
         </div>
 
-        {/* Upload Card */}
-        <div className="upload-card" style={{ width: "100%", background: "white", borderRadius: "24px", padding: "32px", boxShadow: "0 10px 40px -10px rgba(0,0,0,0.08)", border: "1px solid #F3F4F6" }}>
+        <div className="w-full bg-surface-container-lowest/90 backdrop-blur-xl rounded-[2rem] p-6 shadow-lg border border-surface-container">
           
           {uploadedDocs.length > 0 && (
-            <div style={{ marginBottom: "24px" }}>
-              <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#374151", marginBottom: "12px" }}>
+            <div className="mb-6">
+              <h3 className="font-label-lg text-label-lg text-on-surface mb-3">
                 Uploaded Documents ({uploadedDocs.length}/{MAX_DOCS})
               </h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div className="flex flex-col gap-3">
                 {uploadedDocs.map(doc => (
-                  <div key={doc.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: "12px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", overflow: "hidden" }}>
-                      <PdfBadgeIcon className="w-5 h-5 flex-shrink-0" style={{ color: "#EF4444" }} />
-                      <div style={{ overflow: "hidden" }}>
-                        <p style={{ fontSize: "14px", fontWeight: 500, color: "#111827", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{doc.fileName}</p>
-                        <p style={{ fontSize: "12px", color: "#6B7280" }}>{doc.pageCount} pages · {doc.fileSize} · {doc.chunks.length} chunks</p>
+                  <div key={doc.id} className="flex items-center justify-between p-4 bg-surface-container-low rounded-2xl border border-surface-container-high transition-colors hover:bg-surface-container">
+                    <div className="flex items-center gap-4 overflow-hidden">
+                      <div className="w-10 h-10 rounded-xl bg-primary-fixed flex items-center justify-center text-primary shrink-0">
+                        <span className="material-symbols-outlined text-[20px]">description</span>
+                      </div>
+                      <div className="overflow-hidden flex flex-col">
+                        <span className="font-label-md text-label-md text-on-surface truncate">{doc.fileName}</span>
+                        <span className="font-body-sm text-body-sm text-on-surface-variant">{doc.pageCount} pages · {doc.fileSize} · {doc.chunks.length} chunks</span>
                       </div>
                     </div>
                     <button 
                       onClick={() => handleRemoveDoc(doc.id)}
-                      style={{ background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", padding: "4px" }}
+                      className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors shrink-0"
                       title="Remove document"
                     >
-                      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                      <span className="material-symbols-outlined text-[20px]">close</span>
                     </button>
                   </div>
                 ))}
@@ -200,75 +197,59 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
             </div>
           )}
 
-          {/* Drop Zone */}
           {(!limitReached && !chunksLimitReached) ? (
             <div
-              id="pdf-drop-zone"
               role="button"
               tabIndex={0}
-              aria-label="Drop PDF file here or click to browse"
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onClick={() => !selectedFile && fileInputRef.current?.click()}
               onKeyDown={(e) => e.key === "Enter" && !selectedFile && fileInputRef.current?.click()}
-              className={`drop-zone ${isDragging ? "dragging" : ""} ${selectedFile ? "ready" : ""}`}
-              style={{
-                border: "2px dashed #E5E7EB", borderRadius: "16px", padding: "32px 20px",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: "16px",
-                cursor: selectedFile ? "default" : "pointer", transition: "all 0.2s",
-                background: isDragging ? "#F0F9FF" : selectedFile ? "#F9FAFB" : "transparent",
-                borderColor: isDragging ? "#38BDF8" : selectedFile ? "#D1D5DB" : "#E5E7EB"
-              }}
+              className={`border-2 border-dashed rounded-3xl p-8 flex flex-col items-center gap-4 text-center cursor-pointer transition-all ${
+                isDragging ? "border-primary bg-primary-fixed/30" : 
+                selectedFile ? "border-secondary bg-secondary-fixed/20" : 
+                "border-outline-variant bg-surface-container-low hover:bg-surface-container hover:border-primary/50"
+              }`}
             >
               {selectedFile ? (
                 <>
-                  <div style={{
-                    width: 52, height: 52, borderRadius: "14px",
-                    background: "linear-gradient(135deg, #0EA5E9, #0D9488)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    boxShadow: "0 6px 18px rgba(14,165,233,0.3)"
-                  }}>
-                    <CheckIcon className="w-6 h-6" style={{ color: "white" }} />
+                  <div className="w-14 h-14 rounded-2xl bg-secondary-fixed flex items-center justify-center text-secondary shadow-sm">
+                    <span className="material-symbols-outlined text-[28px]">check_circle</span>
                   </div>
-                  <div style={{ textAlign: "center" }}>
-                    <p style={{ fontWeight: 600, fontSize: "14px", color: "#111827", maxWidth: "260px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div className="flex flex-col items-center">
+                    <span className="font-label-lg text-label-lg text-on-surface max-w-[260px] truncate">
                       {selectedFile.name}
-                    </p>
-                    <p style={{ color: "#9CA3AF", fontSize: "12px", marginTop: "4px" }}>
+                    </span>
+                    <span className="font-body-sm text-body-sm text-on-surface-variant mt-1">
                       {formatBytes(selectedFile.size)} · Ready to analyze
-                    </p>
+                    </span>
                   </div>
-                  <div style={{ display: "flex", gap: "12px", marginTop: "8px" }}>
+                  <div className="flex gap-3 mt-2">
                     <button type="button"
                       onClick={(e) => { e.stopPropagation(); setSelectedFile(null); setFileError(null); }}
-                      style={{ fontSize: "13px", color: "#6B7280", fontWeight: 500, background: "none", border: "none", cursor: "pointer" }}>
+                      className="px-4 py-2 rounded-full font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high transition-colors">
                       Cancel
                     </button>
                     <button type="button"
                       disabled={uploading}
                       onClick={(e) => { e.stopPropagation(); handleUpload(); }}
-                      style={{ fontSize: "13px", color: "white", fontWeight: 600, background: "#0EA5E9", border: "none", cursor: "pointer", padding: "6px 16px", borderRadius: "99px", display: "flex", alignItems: "center", gap: "6px" }}>
-                      {uploading ? <Spinner size="sm" color="white" /> : null}
+                      className="px-6 py-2 rounded-full bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md shadow-md transition-transform active:scale-95 flex items-center gap-2">
+                      {uploading ? <SpinnerTeal size="sm" /> : <span className="material-symbols-outlined text-[18px]">upload</span>}
                       {uploading ? "Analyzing..." : "Confirm & Add"}
                     </button>
                   </div>
                 </>
               ) : (
                 <>
-                  <div style={{
-                    width: 56, height: 56, borderRadius: "16px",
-                    background: "#EFF6FF", border: "1.5px solid #BAE6FD",
-                    display: "flex", alignItems: "center", justifyContent: "center"
-                  }}>
-                    <UploadIcon className="w-7 h-7" style={{ color: "#0EA5E9" }} />
+                  <div className="w-16 h-16 rounded-2xl bg-surface-container-lowest border border-surface-container-high flex items-center justify-center text-primary shadow-sm">
+                    <span className="material-symbols-outlined text-[32px]">upload_file</span>
                   </div>
-                  <div style={{ textAlign: "center" }}>
-                    <p style={{ color: "#374151", fontWeight: 500, fontSize: "14px" }}>
-                      Drag & drop your PDF here, or{" "}
-                      <span style={{ color: "#0EA5E9", fontWeight: 700, cursor: "pointer" }}>browse</span>
+                  <div className="flex flex-col items-center">
+                    <p className="font-label-md text-label-md text-on-surface">
+                      Drag & drop your PDF here, or <span className="text-primary font-bold">browse</span>
                     </p>
-                    <p style={{ color: "#9CA3AF", fontSize: "12px", marginTop: "6px" }}>
+                    <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">
                       {uploadedDocs.length > 0 ? "Add another document" : "PDF files only"} · Up to {MAX_SIZE_MB} MB
                     </p>
                   </div>
@@ -276,47 +257,38 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
               )}
             </div>
           ) : (
-            <div style={{ padding: "20px", textAlign: "center", background: "#FEF2F2", border: "1px dashed #FCA5A5", borderRadius: "16px" }}>
-              <p style={{ color: "#DC2626", fontSize: "14px", fontWeight: 500 }}>
+            <div className="p-6 text-center bg-error-container/30 border border-error-container rounded-3xl">
+              <p className="font-label-md text-label-md text-on-error-container">
                 {limitReached ? "Maximum of 3 documents reached." : "Maximum chunk limit reached."}
               </p>
             </div>
           )}
 
-          <input ref={fileInputRef} id="pdf-file-input" type="file" accept="application/pdf" style={{ display: "none" }} onChange={handleFileChange} />
+          <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={handleFileChange} />
 
-          {fileError && <div style={{ marginTop: "14px" }}><ErrorBanner message={fileError} /></div>}
-          {uploadError && <div style={{ marginTop: "14px" }}><ErrorBanner message={uploadError} /></div>}
+          {fileError && <div className="mt-4"><ErrorBanner message={fileError} /></div>}
+          {uploadError && <div className="mt-4"><ErrorBanner message={uploadError} /></div>}
 
-          {/* Start Chatting Button */}
           {uploadedDocs.length > 0 && (
             <button
               onClick={handleStartChatting}
-              style={{
-                marginTop: "24px", width: "100%", padding: "14px",
-                background: "linear-gradient(to right, #4F46E5, #7C3AED)",
-                color: "white", fontSize: "16px", fontWeight: 600,
-                border: "none", borderRadius: "12px", cursor: "pointer",
-                boxShadow: "0 4px 14px rgba(124,58,237,0.3)",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: "8px"
-              }}
+              className="mt-8 w-full py-4 rounded-full bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg shadow-[0_4px_16px_rgba(70,72,212,0.3)] transition-transform active:scale-[0.98] flex items-center justify-center gap-2"
             >
-              <SparklesIcon className="w-5 h-5" style={{ color: "white" }} />
+              <span className="material-symbols-outlined text-[20px]">chat</span>
               Start Chatting
             </button>
           )}
 
-          {/* Feature tags */}
           {uploadedDocs.length === 0 && (
-            <div style={{ marginTop: "24px", paddingTop: "18px", borderTop: "1px solid #F3F4F6", display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center" }}>
-              {[{ icon: "📄", text: "Multi-PDF" }, { icon: "🔗", text: "Source Citations" }, { icon: "⚡", text: "Instant Answers" }].map((t) => (
-                <span key={t.text} style={{
-                  display: "inline-flex", alignItems: "center", gap: "5px",
-                  background: "#F9FAFB", border: "1px solid #E5E7EB",
-                  borderRadius: "999px", padding: "4px 12px",
-                  fontSize: "12px", fontWeight: 500, color: "#374151"
-                }}>
-                  {t.icon} {t.text}
+            <div className="mt-8 pt-6 border-t border-surface-container flex flex-wrap gap-3 justify-center">
+              {[
+                { icon: "library_books", text: "Multi-PDF" },
+                { icon: "link", text: "Source Citations" },
+                { icon: "bolt", text: "Instant Answers" }
+              ].map((t) => (
+                <span key={t.text} className="inline-flex items-center gap-1.5 bg-surface-container-low px-4 py-1.5 rounded-full font-label-sm text-label-sm text-on-surface-variant border border-surface-container-high">
+                  <span className="material-symbols-outlined text-[16px]">{t.icon}</span>
+                  {t.text}
                 </span>
               ))}
             </div>

@@ -1,29 +1,41 @@
 {
   "name": "ai-chat-boat",
+  "type": "module",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "prisma skills sync || exit 0",
+    "contract:emit": "prisma contract emit"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.9.7",
     "@google/generative-ai": "^0.24.1",
+    "@prisma/orm-postgres": "^8.0.0-rc.13",
+    "dotenv": "^18.0.4",
+    "lucide-react": "^1.48.0",
     "next": "16.2.12",
     "pdf-parse": "^2.4.5",
+    "pg": "^8.23.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-markdown": "^10.1.0",
     "unpdf": "^1.8.0"
   },
   "devDependencies": {
+    "@prisma/cli-engine": "^0.6.1",
+    "@prisma/client": "^7.10.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
+    "prisma": "^8.0.0-rc.17",
+    "prisma7": "npm:prisma@^7.10.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

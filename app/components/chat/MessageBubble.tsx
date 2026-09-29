@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
+import { CheckCheck, User, Sparkles, ThumbsUp, ThumbsDown, Copy, Check, BookmarkPlus } from 'lucide-react';
 import { ActiveSource, DocInfo, Message } from "@/app/types";
-import { BotIcon, UserIcon } from "../ui/Icons";
-import SourceBadge from "./SourceBadge";
 import ReactMarkdown from "react-markdown";
 
 interface MessageBubbleProps {
@@ -16,53 +15,29 @@ interface MessageBubbleProps {
 function renderUserMessage(text: string) {
   if (!text) return null;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+    <div className="flex flex-col gap-1">
       {text.split("\n").map((line, i) => (
-        <div key={i} style={{ lineHeight: "1.7", whiteSpace: "pre-wrap" }}>
-          {line}
-        </div>
+        <p key={i} className="font-body-md text-body-md leading-relaxed">{line}</p>
       ))}
     </div>
   );
 }
 
 const markdownComponents = {
-  h1: ({ node, ...props }: any) => <h1 style={{ fontSize: "1.25rem", fontWeight: 700, marginTop: "1.25rem", marginBottom: "0.5rem", color: "#111827" }} {...props} />,
-  h2: ({ node, ...props }: any) => <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginTop: "1rem", marginBottom: "0.5rem", color: "#111827" }} {...props} />,
-  h3: ({ node, ...props }: any) => <h3 style={{ fontSize: "1rem", fontWeight: 600, marginTop: "1rem", marginBottom: "0.5rem", color: "#111827" }} {...props} />,
-  p: ({ node, ...props }: any) => <p style={{ marginBottom: "0.5rem", lineHeight: "1.7" }} {...props} />,
-  ul: ({ node, ...props }: any) => <ul style={{ margin: "0.5rem 0", paddingLeft: "1.5rem", listStyleType: "disc" }} {...props} />,
-  ol: ({ node, ...props }: any) => <ol style={{ margin: "0.5rem 0", paddingLeft: "1.5rem", listStyleType: "decimal" }} {...props} />,
-  li: ({ node, ...props }: any) => <li style={{ marginBottom: "0.25rem", lineHeight: "1.7" }} {...props} />,
-  strong: ({ node, ...props }: any) => <strong style={{ fontWeight: 700, color: "#111827" }} {...props} />,
-  em: ({ node, ...props }: any) => <em style={{ fontStyle: "italic" }} {...props} />,
+  h1: ({ node, ...props }: any) => <h1 className="text-headline-lg font-headline-lg mt-4 mb-2 text-on-surface" {...props} />,
+  h2: ({ node, ...props }: any) => <h2 className="text-headline-sm font-headline-sm mt-4 mb-2 text-on-surface" {...props} />,
+  h3: ({ node, ...props }: any) => <h3 className="text-label-lg font-label-lg mt-3 mb-2 text-on-surface" {...props} />,
+  p: ({ node, ...props }: any) => <p className="mb-2 leading-relaxed" {...props} />,
+  ul: ({ node, ...props }: any) => <ul className="my-2 pl-6 list-disc" {...props} />,
+  ol: ({ node, ...props }: any) => <ol className="my-2 pl-6 list-decimal" {...props} />,
+  li: ({ node, ...props }: any) => <li className="mb-1 leading-relaxed" {...props} />,
+  strong: ({ node, ...props }: any) => <strong className="font-bold text-on-surface" {...props} />,
+  em: ({ node, ...props }: any) => <em className="italic" {...props} />,
   code: ({ node, inline, ...props }: any) => (
-    <code
-      style={{
-        background: "#f3f4f6",
-        color: "#6d28d9",
-        borderRadius: "4px",
-        padding: "2px 6px",
-        fontFamily: "monospace",
-        fontSize: "12px",
-        border: "1px solid #e5e7eb",
-      }}
-      {...props}
-    />
+    <code className="bg-surface-container-high text-primary rounded px-1.5 py-0.5 font-mono text-sm border border-outline-variant" {...props} />
   ),
   pre: ({ node, ...props }: any) => (
-    <pre
-      style={{
-        overflowX: "auto",
-        padding: "12px",
-        background: "#1f2937",
-        color: "#f3f4f6",
-        borderRadius: "8px",
-        margin: "12px 0",
-        fontSize: "12px",
-      }}
-      {...props}
-    />
+    <pre className="overflow-x-auto p-3 bg-inverse-surface text-inverse-on-surface rounded-lg my-3 text-sm" {...props} />
   ),
 };
 
@@ -81,47 +56,61 @@ export default function MessageBubble({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  return (
-    <div className={`msg-row ${isUser ? "user" : ""}`}>
-      {/* Avatar */}
-      <div className={`avatar ${isUser ? "avatar-user" : "avatar-ai"}`}>
-        {isUser
-          ? <UserIcon className="w-4 h-4" style={{ color: "white" }} />
-          : <BotIcon className="w-4 h-4" style={{ color: "white" }} />
-        }
+  if (isUser) {
+    return (
+      <div className="flex justify-end items-start gap-3 w-full mt-4">
+        <div className="flex flex-col items-end max-w-xl gap-1">
+          <div className="bg-primary text-on-primary py-2.5 px-4 rounded-3xl rounded-br-sm shadow-md">
+            {renderUserMessage(message.content)}
+          </div>
+          <div className="flex items-center gap-1 mt-1 pr-1 opacity-60">
+            <span className="text-[10px] uppercase font-medium text-gray-500 tracking-wide">Delivered</span>
+            <CheckCheck size={14} className="text-primary" />
+          </div>
+        </div>
+        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-sm text-on-primary shrink-0 mb-5">
+          <User size={16} />
+        </div>
       </div>
+    );
+  }
 
-      {/* Bubble */}
-      <div className={isUser ? "bubble-user" : "bubble-ai"}>
-        {isUser ? (
-          renderUserMessage(message.content)
-        ) : (
+  return (
+    <div className="flex items-start gap-4 w-full">
+      <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-primary to-primary-container flex items-center justify-center shadow-sm text-on-primary shrink-0 mt-1">
+        <Sparkles size={16} />
+      </div>
+      <div className="flex-1 py-1 flex flex-col gap-2 transition-all">
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-space-xs">
+            <span className="font-semibold text-[14px] text-[#1f1f1f] tracking-wide">DocuMind AI</span>
+          </div>
+        </div>
+        
+        <div className="font-body-md text-body-md text-on-surface leading-relaxed">
           <ReactMarkdown components={markdownComponents}>
             {message.content}
           </ReactMarkdown>
-        )}
+        </div>
 
-        {/* AI footer */}
-        {!isUser && message.content && (
-          <div className="msg-footer">
-            <div>
+        {message.content && (
+          <div className="flex items-center justify-between pt-space-sm  mt-2">
+            <div className="flex items-center gap-space-xs">
+              <button aria-label="Helpful" className="p-1.5 flex items-center justify-center text-gray-400 hover:text-green-600 transition-colors" type="button">
+                <ThumbsUp size={14} />
+              </button>
+              <button aria-label="Not helpful" className="p-1.5 flex items-center justify-center text-gray-400 hover:text-red-600 transition-colors" type="button">
+                <ThumbsDown size={14} />
+              </button>
+              <button onClick={handleCopy} aria-label="Copy summary" className="p-1.5 flex items-center justify-center text-gray-400 hover:text-gray-800 transition-colors" type="button">
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+              </button>
+              {copied && <span className="text-primary font-label-sm text-label-sm ml-2">Copied!</span>}
             </div>
-            <button className="copy-btn" onClick={handleCopy} title="Copy">
-              {copied ? (
-                <>
-                  <svg width="13" height="13" fill="none" stroke="#10b981" strokeWidth="2.5" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span style={{ color: "#10b981", fontWeight: 600 }}>Copied!</span>
-                </>
-              ) : (
-                <>
-                  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  <span>Copy</span>
-                </>
-              )}
+            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-800 text-[12px] font-medium transition-colors" type="button">
+              <BookmarkPlus size={14} />
+              <span>Save to Canvas</span>
             </button>
           </div>
         )}

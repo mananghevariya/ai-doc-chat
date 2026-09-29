@@ -15,20 +15,19 @@ export default function PdfChat() {
   const [docInfo, setDocInfo] = useState<DocInfo | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isRestored, setIsRestored] = useState(false);
+  const [chatId, setChatId] = useState<string | null>(null);
 
-  // 1. Restore from localStorage on initial mount
+  // 1. Restore from localStorage on initial mount (ONLY docInfo, NOT messages)
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (saved) {
-        const parsed: SavedSession = JSON.parse(saved);
+        const parsed = JSON.parse(saved);
         if (
           parsed &&
           parsed.docInfo &&
-          Array.isArray(parsed.docInfo.chunks) &&
-          Array.isArray(parsed.messages)
+          Array.isArray(parsed.docInfo.chunks)
         ) {
-          // Normalize restored session to support documents array
           const restoredDocs = parsed.docInfo.documents || [
             {
               id: "doc-1",
@@ -44,9 +43,6 @@ export default function PdfChat() {
             ...parsed.docInfo,
             documents: restoredDocs,
           });
-          setMessages(
-            parsed.messages.map((m) => ({ ...m, isNew: false }))
-          );
         } else {
           localStorage.removeItem(LOCAL_STORAGE_KEY);
         }
@@ -58,29 +54,20 @@ export default function PdfChat() {
     }
   }, []);
 
-  // 2. Persist to localStorage whenever docInfo or messages changes
+  // 2. Persist docInfo to localStorage
   useEffect(() => {
     if (!isRestored) return;
-
-    if (docInfo && messages.length > 0) {
+    if (docInfo) {
       try {
-        const sessionData: SavedSession = {
-          docInfo,
-          messages,
-          updatedAt: Date.now(),
-        };
+        const sessionData = { docInfo, updatedAt: Date.now() };
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sessionData));
-      } catch {
-        // Silently ignore storage errors
-      }
-    } else if (!docInfo) {
+      } catch { }
+    } else {
       try {
         localStorage.removeItem(LOCAL_STORAGE_KEY);
-      } catch {
-        // Silently ignore
-      }
+      } catch { }
     }
-  }, [docInfo, messages, isRestored]);
+  }, [docInfo, isRestored]);
 
   // 3. Upload success handler
   const handleUploadSuccess = (info: DocInfo) => {
@@ -88,23 +75,17 @@ export default function PdfChat() {
     const initialMsg: Message = {
       id: uid(),
       role: "assistant",
-      content: `I have extracted "${info.fileName}" (${info.pageCount} page${
-        info.pageCount !== 1 ? "s" : ""
-      }, ~${info.wordCount.toLocaleString()} words). Ask me any question based on this document.`,
+      content: `I have extracted "${info.fileName}". Ask me any question based on this document.`,
       isNew: false,
     };
     setMessages([initialMsg]);
+    setChatId(null);
   };
 
   // 4. Start New Chat / Reset handler
   const handleReset = () => {
-    setDocInfo(null);
     setMessages([]);
-    try {
-      localStorage.removeItem(LOCAL_STORAGE_KEY);
-    } catch {
-      // Silently ignore
-    }
+    setChatId(null);
   };
 
   if (!isRestored) {
@@ -131,6 +112,8 @@ export default function PdfChat() {
       messages={messages}
       setMessages={setMessages}
       onReset={handleReset}
+      chatId={chatId}
+      setChatId={setChatId}
     />
   );
 }
