@@ -41,7 +41,7 @@ export async function GET(
 
     return NextResponse.json({ chat, messages: msgResult.rows });
   } catch (err: any) {
-    console.error(`========== /api/chats/${params.id} ERROR ==========`);
+    console.error(`========== /api/chats/[id] ERROR ==========`);
     console.error(err);
     return NextResponse.json(
       { error: "Failed to fetch chat details." },
