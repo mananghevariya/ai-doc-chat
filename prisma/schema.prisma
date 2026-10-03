@@ -16,12 +16,14 @@ model User {
 }
 
 model Chat {
-  id        String    @id @default(uuid())
-  title     String
-  userId    String
-  user      User      @relation(fields: [userId], references: [id])
-  messages  Message[]
-  createdAt DateTime  @default(now())
+  id          String         @id @default(uuid())
+  title       String
+  userId      String
+  user        User           @relation(fields: [userId], references: [id])
+  messages    Message[]
+  documents   ChatDocument[]
+  activeModel String         @default("gemini-3.8-flash")
+  createdAt   DateTime       @default(now())
 }
 
 model Message {
@@ -30,14 +32,26 @@ model Message {
   chat      Chat     @relation(fields: [chatId], references: [id])
   role      String   // "user" or "ai"
   content   String
+  modelUsed String?  // Optional, tracks which model answered this specific message
   createdAt DateTime @default(now())
 }
 
 model Document {
-  id        String   @id @default(uuid())
+  id        String         @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User           @relation(fields: [userId], references: [id])
   fileName  String
-  fileUrl   String
-  createdAt DateTime @default(now())
+  fileSize  Int?
+  pageCount Int?
+  chats     ChatDocument[]
+  createdAt DateTime       @default(now())
+}
+
+model ChatDocument {
+  chatId     String
+  documentId String
+  chat       Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@id([chatId, documentId])
 }

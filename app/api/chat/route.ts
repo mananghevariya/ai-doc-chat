@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { query } from "@/lib/prisma";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -19,77 +20,90 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Upsert User in Database to satisfy foreign key constraints
-    const { currentUser } = await import("@clerk/nextjs/server");
-    const user = await currentUser();
-    const email = user?.primaryEmailAddress?.emailAddress || `unknown-${userId}@example.com`;
-    await query(`INSERT INTO "User" (id, email) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING`, [userId, email]);
-
-    const body = (await req.json()) as {
-      chatId?: string;
-      question?: string;
-      documentChunks?: string[];
-    };
-
-    let { chatId, question, documentChunks } = body;
+    const body = await req.json();
+    const { chatId, question, model } = body;
 
     if (!question?.trim()) {
       return NextResponse.json({ error: "A question is required." }, { status: 400 });
     }
 
-    if (!Array.isArray(documentChunks) || documentChunks.length === 0) {
-      return NextResponse.json({ error: "Document context is missing." }, { status: 400 });
-    }
-
-    // 2. Database: Create Chat if it doesn't exist
-    if (!chatId) {
-      chatId = generateUUID();
-      const title = question.substring(0, 40) + (question.length > 40 ? "..." : "");
-      await query(
-        `INSERT INTO "Chat" (id, "userId", title, "createdAt") VALUES ($1, $2, $3, NOW())`,
-        [chatId, userId, title]
-      );
-    }
-
-    // 3. Database: Save User's Message
-    const userMsgId = generateUUID();
-    await query(
-      `INSERT INTO "Message" (id, "chatId", role, content, "createdAt") VALUES ($1, $2, $3, $4, NOW())`,
-      [userMsgId, chatId, 'user', question]
-    );
-
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === "paste_your_new_key_here") {
+    if (!apiKey) {
       return NextResponse.json({ error: "Gemini API key is not configured." }, { status: 500 });
     }
 
+    // Upsert User (Safety)
+    const user = await currentUser();
+    const email = user?.primaryEmailAddress?.emailAddress || `unknown-${userId}@example.com`;
+    await query(`INSERT INTO "User" (id, email) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING`, [userId, email]);
+
+    let activeChatId = chatId;
+
+    // If no chatId, this is a brand new regular chat
+    if (!activeChatId) {
+      activeChatId = generateUUID();
+      const title = question.slice(0, 30) + (question.length > 30 ? "..." : "");
+      await query(
+        `INSERT INTO "Chat" (id, title, "userId", "activeModel", "createdAt") VALUES ($1, $2, $3, $4, NOW())`,
+        [activeChatId, title, userId, model || 'gemini-3.8-flash']
+      );
+    }
+
+    // 1. Database: Save User's Message
+    const userMsgId = generateUUID();
+    await query(
+      `INSERT INTO "Message" (id, "chatId", role, content, "modelUsed", "createdAt") VALUES ($1, $2, $3, $4, $5, NOW())`,
+      [userMsgId, activeChatId, 'user', question, null]
+    );
+
     const genAI = new GoogleGenerativeAI(apiKey);
-    const candidateModels = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro-latest", "gemini-3.7-flash", "gemini-3.6-flash"];
+    let indexedContext = "";
 
-    const slicedChunks = documentChunks.slice(0, 60);
-    const indexedContext = slicedChunks
-      .map((chunk, idx) => {
-        const docMatch = chunk.match(/^\[Document: (.*?)\]\n/);
-        const docName = docMatch ? docMatch[1] : "Unknown Document";
-        const cleanChunk = chunk.replace(/^\[Document: .*?\]\n/, "");
-        return `[Document: ${docName}, Chunk ${idx + 1}]\n${cleanChunk}`;
-      })
-      .join("\n\n---\n\n");
+    // 2. Vector Similarity Search (RAG) - ONLY IF CHAT HAS DOCUMENTS
+    const docsResult = await query(
+      `SELECT "documentId" FROM "ChatDocument" WHERE "chatId" = $1`,
+      [activeChatId]
+    );
 
-    const prompt = `You are a precise multi-document AI assistant. Your sole job is to answer the user's question based strictly on the document context provided below.
+    if (docsResult.rows.length > 0) {
+      console.log(`[/api/chat] Chat has ${docsResult.rows.length} documents. Embedding question for search...`);
+      const embeddingModel = genAI.getGenerativeModel({ model: "gemini-embedding-2" });
+      const qEmbedResult = await embeddingModel.embedContent(question);
+      const qVector = `[${qEmbedResult.embedding.values.join(',')}]`;
 
-Context format:
-Each chunk below starts with [Document: filename, Chunk X].
+      const documentIds = docsResult.rows.map(r => r.documentId);
+      
+      const searchResult = await query(`
+        SELECT content, "pageNumber",
+               1 - (embedding <=> $1::vector) as similarity
+        FROM "DocumentChunk"
+        WHERE "documentId" = ANY($2::text[])
+        ORDER BY embedding <=> $1::vector
+        LIMIT 5;
+      `, [qVector, documentIds]);
+
+      const relevantChunks = searchResult.rows;
+
+      if (relevantChunks.length > 0) {
+        indexedContext = relevantChunks
+          .map((row, idx) => `[Source Paragraph ${idx + 1}, Relevance: ${(row.similarity * 100).toFixed(1)}%]\n${row.content}`)
+          .join("\n\n---\n\n");
+      }
+    }
+
+    // 3. Prepare the Prompt
+    let prompt = question;
+    if (indexedContext) {
+      prompt = `You are an advanced AI assistant connected to a document search system.
 
 Rules you must follow:
-1. Answer ONLY using information from the provided context. Do not use any external knowledge.
-2. If the user asks about a specific document (e.g., "this document", "the new document", "Drashtin's resume", or a specific file name), focus your answer on that specific document.
-3. If the user asks a general question (e.g., "what is in these documents?"), synthesize information across all relevant documents and clearly state which document each detail comes from.
-4. Identify which Chunk number(s) (e.g., 1, 2) were directly used to answer the question.
-5. If the answer is not in the context, say exactly: "I couldn't find that information in the provided document(s)."
-6. ALWAYS append exactly "===SOURCES===" on a new line at the very end of your answer, followed immediately by a JSON array of the Chunk numbers you directly used (e.g., [1, 2]). If you didn't use any chunks, output []. Do not include the word "chunk" inside the array, only the numbers.
+1. If the user asks a question about the document, answer using ONLY the retrieved document context below. Do not invent details.
+2. If the user asks a general question, greeting, or asks you to "summarize" the document, you may synthesize information across the relevant paragraphs and give a helpful response.
+3. Identify which Source Paragraph number(s) were directly used to answer the question.
+4. If the user asks for specific facts that are genuinely not in the context, say exactly: "I couldn't find that information in the provided document(s)."
+5. ALWAYS append exactly "===SOURCES===" on a new line at the very end of your answer, followed immediately by a JSON array of the Source Paragraph numbers you directly used (e.g., [1, 2]). If you didn't use any chunks, output []. Do not include the word "chunk" inside the array, only the numbers.
 
-DOCUMENT CONTEXT:
+RETRIEVED DOCUMENT CONTEXT:
 ---
 ${indexedContext}
 ---
@@ -97,63 +111,75 @@ ${indexedContext}
 USER QUESTION: ${question.trim()}
 
 ANSWER:`;
+    }
 
+    const requestedModel = model || "gemini-3.8-flash";
+    const candidateModels = [requestedModel, "gemini-3.8-flash", "gemini-3.7-flash", "gemini-2.5-flash", "gemini-pro-latest"];
+    const uniqueModels = [...new Set(candidateModels)];
+    
     let streamResult: any = null;
-    let lastError: any = null;
+    let successfulModelName = "";
 
-    for (const modelName of candidateModels) {
+    for (const modelName of uniqueModels) {
       try {
         console.log(`[/api/chat] Requesting streaming answer from '${modelName}'...`);
-        const model = genAI.getGenerativeModel({ model: modelName });
-        streamResult = await model.generateContentStream(prompt);
-        lastError = null;
+        const generativeModel = genAI.getGenerativeModel({ model: modelName });
+        streamResult = await generativeModel.generateContentStream(prompt);
+        successfulModelName = modelName;
         break;
       } catch (err: any) {
-        lastError = err;
         console.error(`[/api/chat] Error with model '${modelName}':`, err?.message || err);
       }
     }
 
-    if (lastError || !streamResult) {
-      return NextResponse.json({ error: "Failed to get a response from the AI. Please try again." }, { status: 500 });
+    if (!streamResult) {
+      return NextResponse.json({ error: "Failed to get a response from the AI." }, { status: 500 });
     }
 
+    // 4. Send True SSE (Server-Sent Events) Stream
+    const encoder = new TextEncoder();
     let fullAIResponse = "";
 
-    // Stream the response back to the client natively
-    const stream = new ReadableStream({
+    const readable = new ReadableStream({
       async start(controller) {
+        // Send the Chat ID first so the frontend knows what the active chat is
+        controller.enqueue(encoder.encode(`data: {"chatId": "${activeChatId}"}\n\n`));
+
         try {
           for await (const chunk of streamResult.stream) {
             const textChunk = chunk.text();
             fullAIResponse += textChunk;
-            controller.enqueue(new TextEncoder().encode(textChunk));
+            // Send each chunk properly formatted for SSE
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: textChunk })}\n\n`));
           }
         } catch (err) {
           console.error("Stream reading error", err);
-          controller.error(err);
+          controller.enqueue(encoder.encode(`data: {"error": "Stream interrupted"}\n\n`));
         } finally {
-          // 4. Database: Save AI's Message once stream finishes
+          controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
+          controller.close();
+          
+          // Save AI Message to DB in background
           try {
             const aiMsgId = generateUUID();
             await query(
-              `INSERT INTO "Message" (id, "chatId", role, content, "createdAt") VALUES ($1, $2, $3, $4, NOW())`,
-              [aiMsgId, chatId!, 'ai', fullAIResponse]
+              `INSERT INTO "Message" (id, "chatId", role, content, "modelUsed", "createdAt") VALUES ($1, $2, $3, $4, $5, NOW())`,
+              [aiMsgId, activeChatId, 'ai', fullAIResponse, successfulModelName]
             );
             console.log("[/api/chat] Saved AI message to DB successfully.");
           } catch (dbErr) {
             console.error("Failed to save AI message to DB", dbErr);
           }
-          controller.close();
         }
       },
     });
 
-    return new Response(stream, {
+    return new Response(readable, {
       headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "no-cache",
-        "X-Chat-Id": chatId!,
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-transform",
+        "Connection": "keep-alive",
+        "X-Chat-Id": activeChatId,
       },
     });
   } catch (err: any) {

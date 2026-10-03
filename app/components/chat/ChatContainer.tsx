@@ -36,12 +36,14 @@ export default function ChatContainer({
 }: ChatContainerProps) {
   const [inputValue, setInputValue] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
   const [addingDoc, setAddingDoc] = useState(false);
   const [addDocError, setAddDocError] = useState<string | null>(null);
   const [activeSource, setActiveSource] = useState<ActiveSource | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [chatHistory, setChatHistory] = useState<any[]>([]);
+  const [selectedModel, setSelectedModel] = useState("gemini-3.8-flash");
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -89,6 +91,18 @@ export default function ChatContainer({
     return () => { el.removeEventListener("scroll", onScroll); ro.disconnect(); };
   }, []);
 
+  // Add this outside or as a ref: 
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const stopGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setChatLoading(false);
+      setIsStreaming(false);
+    }
+  };
+
   const sendQuestion = async (q: string) => {
     const question = q.trim();
     if (!question || chatLoading || addingDoc) return;
@@ -99,22 +113,29 @@ export default function ChatContainer({
     
     const msgId = uid();
     setChatLoading(true);
+    setIsStreaming(true);
     
+    abortControllerRef.current = new AbortController();
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST", 
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chatId, question, documentChunks: docInfo.chunks }),
+        body: JSON.stringify({ chatId, question, model: selectedModel }),
+        signal: abortControllerRef.current.signal,
       });
       
       const returnedChatId = res.headers.get("X-Chat-Id");
       if (returnedChatId && !chatId) {
         setChatId(returnedChatId);
-        setChatHistory(prev => [{
-          id: returnedChatId,
-          title: question.slice(0, 30) + (question.length > 30 ? "..." : ""),
-          createdAt: new Date().toISOString()
-        }, ...prev]);
+        setChatHistory(prev => {
+          if (prev.find(c => c.id === returnedChatId)) return prev;
+          return [{
+            id: returnedChatId,
+            title: question.slice(0, 30) + (question.length > 30 ? "..." : ""),
+            createdAt: new Date().toISOString()
+          }, ...prev];
+        });
       }
 
       if (!res.ok) { 
@@ -128,65 +149,98 @@ export default function ChatContainer({
       if (!reader) throw new Error("No readable stream available.");
       
       const decoder = new TextDecoder();
-      let accumulated = "";
-      let done = false;
+      let accumulatedText = "";
       let hasSources = false;
-      let answerText = "";
       let firstChunkReceived = false;
+      let buffer = "";
       
-      while (!done) {
+      while (true) {
         const { value, done: readerDone } = await reader.read();
-        done = readerDone;
+        if (readerDone) break;
         
         if (value) {
-          accumulated += decoder.decode(value, { stream: !done });
+          buffer += decoder.decode(value, { stream: true });
           
-          if (!firstChunkReceived) {
-            firstChunkReceived = true;
-            setChatLoading(false);
-            setMessages((p) => [...p, { id: msgId, role: "assistant", content: accumulated, isNew: true }]);
-          }
+          const lines = buffer.split('\n');
+          // Keep the last partial line in the buffer
+          buffer = lines.pop() || "";
           
-          if (!hasSources) {
-            const splitIdx = accumulated.indexOf("===SOURCES===");
-            if (splitIdx !== -1) {
-              hasSources = true;
-              answerText = accumulated.substring(0, splitIdx).trim();
-              setMessages((p) => p.map(m => m.id === msgId ? { ...m, content: answerText } : m));
-            } else {
-              setMessages((p) => p.map(m => m.id === msgId ? { ...m, content: accumulated } : m));
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const dataStr = line.replace('data: ', '').trim();
+              if (dataStr === '[DONE]') {
+                break;
+              }
+              try {
+                const parsed = JSON.parse(dataStr);
+                if (parsed.chatId && !chatId) {
+                  setChatId(parsed.chatId);
+                }
+                if (parsed.error) {
+                  setChatError(parsed.error);
+                }
+                if (parsed.text) {
+                  accumulatedText += parsed.text;
+                  
+                  if (!firstChunkReceived) {
+                    firstChunkReceived = true;
+                    setChatLoading(false);
+                    setMessages((p) => [...p, { id: msgId, role: "assistant", content: accumulatedText, isNew: true }]);
+                  }
+                  
+                  if (!hasSources) {
+                    const splitIdx = accumulatedText.indexOf("===SOURCES===");
+                    if (splitIdx !== -1) {
+                      hasSources = true;
+                      const answerText = accumulatedText.substring(0, splitIdx).trim();
+                      setMessages((p) => p.map(m => m.id === msgId ? { ...m, content: answerText } : m));
+                    } else {
+                      setMessages((p) => p.map(m => m.id === msgId ? { ...m, content: accumulatedText } : m));
+                    }
+                  }
+                }
+              } catch (e) {
+                console.error("Failed to parse SSE line", e, dataStr);
+              }
             }
           }
         }
       }
-      
       if (!firstChunkReceived) {
          setChatLoading(false);
          setMessages((p) => [...p, { id: msgId, role: "assistant", content: "No response generated.", isNew: true }]);
       }
       
       if (hasSources) {
-        const splitIdx = accumulated.indexOf("===SOURCES===");
-        const sourceStr = accumulated.substring(splitIdx + "===SOURCES===".length).trim();
-        try {
-          let cleanStr = sourceStr.replace(/```json/g, "").replace(/```/g, "").trim();
-          const match = cleanStr.match(/\[([\d\s,]*)\]/);
-          let indexes: number[] = [];
-          if (match && match[1]) {
-            indexes = match[1].split(",").map(s => parseInt(s.trim())).filter(n => !isNaN(n));
-          } else {
-            indexes = JSON.parse(cleanStr);
+        const splitIdx = accumulatedText.indexOf("===SOURCES===");
+        if (splitIdx !== -1) {
+          const sourceStr = accumulatedText.substring(splitIdx + "===SOURCES===".length).trim();
+          try {
+            let cleanStr = sourceStr.replace(/```json/g, "").replace(/```/g, "").trim();
+            const match = cleanStr.match(/\[([\d\s,]*)\]/);
+            let indexes: number[] = [];
+            if (match && match[1]) {
+              indexes = match[1].split(",").map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+            } else {
+              indexes = JSON.parse(cleanStr);
+            }
+            setMessages((p) => p.map(m => m.id === msgId ? { ...m, sourceChunkIndexes: indexes } : m));
+          } catch (e) {
+            console.error("Failed to parse sources:", sourceStr);
           }
-          setMessages((p) => p.map(m => m.id === msgId ? { ...m, sourceChunkIndexes: indexes } : m));
-        } catch (e) {
-          console.error("Failed to parse sources:", sourceStr);
         }
       }
       
-    } catch { 
-      setChatError("Network error. Please try again."); 
+    } catch (e: any) { 
+      if (e.name !== 'AbortError') {
+        console.error("Failed to send question", e);
+        setChatError("Network error. Please try again."); 
+      } else {
+        console.log("Stream aborted by user");
+      }
       setChatLoading(false);
     } finally { 
+      setIsStreaming(false);
       setTimeout(() => inputRef.current?.focus(), 60); 
     }
   };
@@ -258,10 +312,15 @@ export default function ChatContainer({
           <span className={`text-[15px] font-medium text-[#1f1f1f] truncate transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>DocuMind</span>
         </div>
 
-        <div className="mb-4 flex justify-center">
+        <div className="mb-4 flex flex-col gap-2">
+          <button onClick={onReset} className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-center gap-2'} bg-white border border-gray-200/50 hover:bg-gray-50 text-[#1f1f1f] py-2.5 ${isCollapsed ? 'px-0' : 'px-4'} rounded-xl shadow-sm transition-all active:scale-[0.98]`} type="button">
+            <Plus size={16} className="shrink-0" />
+            <span className={`text-[13px] font-medium transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>New Chat</span>
+          </button>
+          
           <button onClick={() => addDocInputRef.current?.click()} disabled={addingDoc} className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-center gap-2'} bg-[#0f1115] hover:bg-[#1a1d24] text-white py-2.5 ${isCollapsed ? 'px-0' : 'px-4'} rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.15)] transition-all active:scale-[0.98]`} type="button">
-            {addingDoc ? <SpinnerTeal size="sm" /> : <Plus size={16} className="shrink-0" />}
-            <span className={`text-[13px] font-medium transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>{addingDoc ? "Adding..." : "New Chat"}</span>
+            {addingDoc ? <SpinnerTeal size="sm" /> : <FileText size={16} className="shrink-0" />}
+            <span className={`text-[13px] font-medium transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>{addingDoc ? "Uploading..." : "Upload Document"}</span>
           </button>
           <input ref={addDocInputRef} type="file" accept="application/pdf" style={{ display: "none" }} onChange={handleAddDocumentFile} />
         </div>
@@ -269,23 +328,15 @@ export default function ChatContainer({
         <div className={`mb-4 ${isCollapsed ? 'px-0' : 'px-2'}`}>
           <div className="relative flex items-center justify-center">
             <Search size={16} className={`text-[#444746] transition-all duration-300 ${isCollapsed ? '' : 'absolute left-3'}`} />
-            <input className={`transition-all duration-300 bg-transparent text-[#1f1f1f] placeholder:text-[#444746] focus:outline-none focus:bg-[#f0f4f9] border border-transparent focus:border-[#747775] rounded-xl ${isCollapsed ? 'w-0 opacity-0 p-0 overflow-hidden' : 'w-full pl-9 pr-3 py-1.5 hover:bg-[#f0f4f9] text-[13px]'}`} placeholder="Search" type="text" tabIndex={isCollapsed ? -1 : 0}/>
+            <input className={`transition-all duration-300 bg-transparent text-[#1f1f1f] placeholder:text-[#444746] focus:outline-none focus:bg-[#f0f4f9] border border-transparent focus:border-[#747775] rounded-xl ${isCollapsed ? 'w-0 opacity-0 p-0 overflow-hidden' : 'w-full pl-9 pr-3 py-1.5 hover:bg-[#f0f4f9] text-[13px]'}`} placeholder="Search chats" type="text" tabIndex={isCollapsed ? -1 : 0}/>
           </div>
         </div>
 
         <div className={`flex-1 overflow-y-auto scrollbar-none ${isCollapsed ? 'px-0' : 'px-2'}`}>
           <nav className="flex flex-col gap-1 mb-6">
-            <a className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-3'} py-2.5 rounded-xl transition-all bg-white shadow-sm border border-gray-100/80 text-[#0b57d0] font-semibold`} href="#">
-              <MessageSquare size={16} className="shrink-0" />
-              <span className={`text-[13px] transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>Active Chat</span>
-            </a>
-            <a onClick={onReset} className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl transition-colors text-[#444746] hover:bg-[#f0f4f9] hover:text-[#1f1f1f] cursor-pointer`} href="#">
-              <PlusCircle size={16} className="shrink-0" />
-              <span className={`text-[13px] transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>New Chat</span>
-            </a>
             <a onClick={handleExportChat} className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl transition-colors text-[#444746] hover:bg-[#f0f4f9] hover:text-[#1f1f1f] cursor-pointer`} href="#">
               <Share size={16} className="shrink-0" />
-              <span className={`text-[13px] transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>Export</span>
+              <span className={`text-[13px] transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>Export Chat</span>
             </a>
           </nav>
 
@@ -325,6 +376,21 @@ export default function ChatContainer({
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <div className="relative">
+              <select 
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="appearance-none bg-surface-container-low border border-gray-200 text-[#444746] text-[12px] font-medium rounded-lg px-3 py-1.5 pr-8 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors cursor-pointer"
+              >
+                <option value="gemini-3.8-flash">⚡ Gemini 3.8 Flash (Fast)</option>
+                <option value="gemini-3.7-flash">🧠 Gemini 3.7 Flash</option>
+                <option value="gemini-2.5-flash">🚀 Gemini 2.5 Flash</option>
+                <option value="gemini-pro-latest">💎 Gemini Pro (Advanced)</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#444746]">
+                <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
+              </div>
+            </div>
             <button className="w-8 h-8 rounded-xl flex items-center justify-center text-[#444746] hover:bg-[#f0f4f9] transition-colors" type="button">
               <Sun size={18} className="" />
             </button>
@@ -436,7 +502,18 @@ export default function ChatContainer({
 
         <div className={`fixed bottom-8 ${isCollapsed ? 'left-[112px]' : 'left-[280px]'} right-0 z-40 px-gutter pointer-events-none flex flex-col items-center transition-all duration-300`}>
           <div className="max-w-3xl w-full flex flex-col gap-space-xs pointer-events-auto">
-            {messages.length === 0 && (
+            {isStreaming && (
+              <div className="flex justify-center mb-2">
+                <button 
+                  onClick={stopGeneration}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 shadow-sm rounded-full text-[13px] font-medium text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors"
+                  type="button"
+                >
+                  <X size={16} /> Stop Generation
+                </button>
+              </div>
+            )}
+            {messages.length === 0 && !isStreaming && (
               <div className="flex flex-wrap items-center gap-2 py-1 px-1 justify-center">
                 {QUICK_PROMPTS.map((p, idx) => {
                   const colors = ["primary", "secondary", "tertiary", "primary"];
