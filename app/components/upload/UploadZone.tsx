@@ -134,6 +134,22 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
     });
   };
 
+  const [loadingSample, setLoadingSample] = useState(false);
+  const handleTrySample = async () => {
+    if (loadingSample || uploading) return;
+    setLoadingSample(true);
+    try {
+      const res = await fetch("/sample-report.pdf");
+      if (!res.ok || !(res.headers.get("content-type") || "").includes("pdf")) throw new Error("not found");
+      const blob = await res.blob();
+      processFile(new File([blob], "Northwind-Q3-Report-sample.pdf", { type: "application/pdf" }));
+    } catch {
+      setFileError("Could not load the sample PDF. Please try again.");
+    } finally {
+      setLoadingSample(false);
+    }
+  };
+
   const handleRemoveDoc = (id: string) => {
     setUploadedDocs(prev => prev.filter(d => d.id !== id));
   };
@@ -278,6 +294,18 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
             >
               <span className="material-symbols-outlined text-[20px]">chat</span>
               Start Chatting
+            </button>
+          )}
+
+          {uploadedDocs.length === 0 && !selectedFile && (
+            <button
+              type="button"
+              onClick={handleTrySample}
+              disabled={loadingSample}
+              className="mt-4 w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-line text-[13px] font-medium text-muted hover:text-ink hover:bg-hover hover:border-primary/40 transition-colors disabled:opacity-60"
+            >
+              {loadingSample ? <SpinnerTeal size="sm" /> : <span className="material-symbols-outlined text-[18px] text-primary">science</span>}
+              No PDF handy? Try a sample report
             </button>
           )}
 

@@ -1,0 +1,76 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Length 1406 >>
+stream
+BT
+/F2 18 Tf 1 0 0 1 50 790 Tm (Northwind Labs - Product Update, Q3 2026) Tj
+/F1 11 Tf 1 0 0 1 50 760 Tm (This is a sample document for trying DocuMind AI. Northwind Labs is a fictional company; all) Tj
+/F1 11 Tf 1 0 0 1 50 745 Tm (names and numbers below are made up for demonstration.) Tj
+/F2 13 Tf 1 0 0 1 50 718 Tm (1. Summary) Tj
+/F1 11 Tf 1 0 0 1 50 694 Tm (In Q3 2026 Northwind Labs shipped version 2.0 of its scheduling app, Plannr. Active users) Tj
+/F1 11 Tf 1 0 0 1 50 679 Tm (grew from 18,400 to 27,900 (+52%). Monthly recurring revenue reached 142,000 USD, up from) Tj
+/F1 11 Tf 1 0 0 1 50 664 Tm (96,000 USD in Q2. Customer churn fell from 4.1% to 2.8%.) Tj
+/F2 13 Tf 1 0 0 1 50 637 Tm (2. Key Launches) Tj
+/F1 11 Tf 1 0 0 1 50 613 Tm (- Plannr 2.0 (July 9): redesigned calendar, dark mode, and team workspaces.) Tj
+/F1 11 Tf 1 0 0 1 50 594 Tm (- Smart Reminders (August 21): reminders that adapt to each user's habits.) Tj
+/F1 11 Tf 1 0 0 1 50 575 Tm (- Public API v1 (September 15): lets partners sync tasks with other tools.) Tj
+/F2 13 Tf 1 0 0 1 50 548 Tm (3. Team) Tj
+/F1 11 Tf 1 0 0 1 50 524 Tm (The company has 24 employees across Pune, Berlin and Toronto. Maya Rao leads engineering (9) Tj
+/F1 11 Tf 1 0 0 1 50 509 Tm (people), Tom Becker leads design (4 people), and Lena Costa leads growth (6 people). Two) Tj
+/F1 11 Tf 1 0 0 1 50 494 Tm (senior engineers joined in September.) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 5 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+7 0 obj
+<< /Length 1034 >>
+stream
+BT
+/F2 13 Tf 1 0 0 1 50 782 Tm (4. Risks and Open Issues) Tj
+/F1 11 Tf 1 0 0 1 50 758 Tm (- Cloud costs rose 31% because of the new Smart Reminders feature.) Tj
+/F1 11 Tf 1 0 0 1 50 739 Tm (- The Android app still crashes for about 1.2% of sessions on older devices.) Tj
+/F1 11 Tf 1 0 0 1 50 720 Tm (- Two enterprise customers asked for single sign-on, which is not yet built.) Tj
+/F2 13 Tf 1 0 0 1 50 693 Tm (5. Plans for Q4 2026) Tj
+/F1 11 Tf 1 0 0 1 50 669 Tm (1. Ship single sign-on (SAML) by November 14.) Tj
+/F1 11 Tf 1 0 0 1 50 650 Tm (2. Cut cloud costs by 15% through caching and cheaper storage tiers.) Tj
+/F1 11 Tf 1 0 0 1 50 631 Tm (3. Launch Plannr for iPad on December 2.) Tj
+/F1 11 Tf 1 0 0 1 50 612 Tm (4. Reach 40,000 active users and 200,000 USD in monthly recurring revenue by December 31.) Tj
+/F2 13 Tf 1 0 0 1 50 585 Tm (6. Budget) Tj
+/F1 11 Tf 1 0 0 1 50 561 Tm (The Q4 budget is 610,000 USD: salaries 420,000, cloud 95,000, marketing 60,000, tools and) Tj
+/F1 11 Tf 1 0 0 1 50 546 Tm (other costs 35,000.) Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 7 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000000266 00000 n 
+0000001724 00000 n 
+0000001860 00000 n 
+0000002946 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
+startxref
+3082
+%%EOF
