@@ -73,14 +73,32 @@ export async function POST(req: NextRequest) {
 
       const documentIds = docsResult.rows.map(r => r.documentId);
       
-      const searchResult = await query(`
-        SELECT content, "pageNumber",
-               1 - (embedding <=> $1::vector) as similarity
-        FROM "DocumentChunk"
-        WHERE "documentId" = ANY($2::text[])
-        ORDER BY embedding <=> $1::vector
-        LIMIT 5;
-      `, [qVector, documentIds]);
+      // Small documents (e.g. a resume): send ALL chunks in reading order so the model
+      // sees the whole document. Larger ones: top-8 chunks by vector similarity.
+      const SMALL_DOC_CHUNKS = 12;
+      const countResult = await query(
+        `SELECT COUNT(*)::int AS n FROM "DocumentChunk" WHERE "documentId" = ANY($1::text[])`,
+        [documentIds]
+      );
+      const totalChunks: number = countResult.rows[0]?.n ?? 0;
+
+      const searchResult =
+        totalChunks > 0 && totalChunks <= SMALL_DOC_CHUNKS
+          ? await query(`
+              SELECT content, "pageNumber",
+                     1 - (embedding <=> $1::vector) as similarity
+              FROM "DocumentChunk"
+              WHERE "documentId" = ANY($2::text[])
+              ORDER BY "documentId", "pageNumber";
+            `, [qVector, documentIds])
+          : await query(`
+              SELECT content, "pageNumber",
+                     1 - (embedding <=> $1::vector) as similarity
+              FROM "DocumentChunk"
+              WHERE "documentId" = ANY($2::text[])
+              ORDER BY embedding <=> $1::vector
+              LIMIT 8;
+            `, [qVector, documentIds]);
 
       const relevantChunks = searchResult.rows;
 
@@ -119,14 +137,14 @@ ANSWER:`;
     const candidateModels = [
       requestedModel,
       "gemini-3.8-flash",
+      "gemini-3.1-flash-lite",
+      "gemini-flash-lite-latest",
       "gemini-3.7-flash",
       "gemini-flash-latest",
-      "gemini-flash-lite-latest",
-      "gemini-3.1-flash-lite",
       "gemini-2.5-flash-lite",
     ];
     const uniqueModels = [...new Set(candidateModels)];
-    const MODEL_TIMEOUT_MS = 12000;
+    const MODEL_TIMEOUT_MS = 8000;
 
     let streamResult: any = null;
     let successfulModelName = "";
