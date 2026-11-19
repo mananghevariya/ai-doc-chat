@@ -446,42 +446,25 @@ export default function ChatContainer({
             <div className="max-w-4xl w-full mx-auto flex flex-col gap-y-space-lg pt-6">
               
               {messages.length === 0 && (
-                <section className="w-full bg-white/60 backdrop-blur-3xl p-8 rounded-[2rem] shadow-[0_8px_32px_rgba(0,0,0,0.04)] border border-white/80 flex flex-col gap-6 transition-all relative overflow-hidden">
-                  <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-2xl"></div>
-<div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md relative z-10">
-                    <div className="flex items-center gap-space-md">
-                      <div className="w-14 h-14 rounded-2xl bg-primary-fixed flex items-center justify-center shadow-sm text-primary">
-                        <FileText size={28} />
-                      </div>
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-space-xs flex-wrap">
-                          <span className="font-headline-sm text-headline-sm text-on-surface">{currentDocs.length > 1 ? `${currentDocs.length} Documents` : currentDocs[0].fileName}</span>
-                          <span className="px-space-xs py-0.5 rounded-xl bg-secondary-fixed font-label-sm text-label-sm text-on-secondary-fixed">{docInfo.pageCount} pages</span>
-                        </div>
-                        <div className="flex items-center gap-space-xs mt-0.5 text-on-surface-variant font-body-sm text-body-sm">
-                          <span className="w-2 h-2 rounded-xl bg-emerald-500 animate-pulse"></span>
-                          <span>Ready to chat • ~{docInfo.wordCount.toLocaleString()} words</span>
-                        </div>
-                      </div>
-                    </div>
+                <section className="w-full min-h-[calc(100vh-300px)] flex flex-col items-center justify-center gap-6 text-center px-2">
+                  <div className="inline-flex items-center gap-2 max-w-full px-4 py-2 rounded-full bg-white/80 border border-gray-200/60 shadow-sm text-[13px] text-on-surface-variant">
+                    <FileText size={16} className="text-primary shrink-0" />
+                    <span className="truncate font-medium text-on-surface">{currentDocs.length > 1 ? `${currentDocs.length} documents` : currentDocs[0].fileName}</span>
+                    <span className="shrink-0">· {docInfo.pageCount} {docInfo.pageCount === 1 ? "page" : "pages"} · {docInfo.wordCount.toLocaleString()} words</span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-space-sm pt-space-xs">
-                    <div className="bg-surface-container-low/70 rounded-2xl p-space-sm flex flex-col">
-                      <span className="font-label-sm text-label-sm text-outline">Pages</span>
-                      <span className="font-headline-sm text-headline-sm text-primary font-bold">{docInfo.pageCount}</span>
-                    </div>
-                    <div className="bg-surface-container-low/70 rounded-2xl p-space-sm flex flex-col">
-                      <span className="font-label-sm text-label-sm text-outline">Words</span>
-                      <span className="font-headline-sm text-headline-sm text-secondary font-bold">{docInfo.wordCount.toLocaleString()}</span>
-                    </div>
-                    <div className="bg-surface-container-low/70 rounded-2xl p-space-sm flex flex-col">
-                      <span className="font-label-sm text-label-sm text-outline">Reading time</span>
-                      <span className="font-headline-sm text-headline-sm text-on-surface font-bold truncate">~{Math.max(1, Math.round(docInfo.wordCount / 200))} min</span>
-                    </div>
-                    <div className="bg-surface-container-low/70 rounded-2xl p-space-sm flex flex-col">
-                      <span className="font-label-sm text-label-sm text-outline">Documents</span>
-                      <span className="font-headline-sm text-headline-sm text-tertiary font-bold">{currentDocs.length}</span>
-                    </div>
+                  <h2 className="text-[28px] sm:text-[32px] font-medium text-[#1f1f1f] leading-tight">
+                    Ask anything about {currentDocs.length > 1 ? "these documents" : "this document"}
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
+                    {QUICK_PROMPTS.map((p, idx) => {
+                      const tint = ["text-primary", "text-secondary", "text-tertiary", "text-primary"][idx % 4];
+                      return (
+                        <button key={p.label} onClick={() => sendQuestion(p.label)} disabled={chatLoading || addingDoc} className="flex items-start gap-3 text-left p-4 rounded-2xl bg-white/80 border border-gray-200/60 shadow-sm hover:shadow-md hover:bg-white transition-all disabled:opacity-50" type="button">
+                          <span className={`mt-0.5 shrink-0 ${tint}`}>{p.icon}</span>
+                          <span className="text-[14px] text-on-surface">{p.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </section>
               )}
@@ -540,20 +523,6 @@ export default function ChatContainer({
                 >
                   <X size={16} /> Stop Generation
                 </button>
-              </div>
-            )}
-            {messages.length === 0 && !isStreaming && (
-              <div className="flex flex-wrap items-center gap-2 py-1 px-1 justify-center">
-                {QUICK_PROMPTS.map((p, idx) => {
-                  const colors = ["primary", "secondary", "tertiary", "primary"];
-                  const color = colors[idx % colors.length];
-                  return (
-                    <button key={p.label} onClick={() => sendQuestion(p.label)} disabled={chatLoading || addingDoc} className={`inline-flex items-center gap-1.5 px-space-md py-1.5 rounded-xl bg-surface-container-lowest/90 backdrop-blur-md shadow-sm hover:shadow text-on-surface-variant hover:text-${color} hover:bg-surface-container-lowest transition-all shrink-0 text-[13px]`} type="button">
-                      <span className={`text-${color}`}>{p.icon}</span>
-                      <span className="font-label-md text-label-md">{p.label}</span>
-                    </button>
-                  );
-                })}
               </div>
             )}
             <form onSubmit={handleSend} className="w-full bg-white/90 backdrop-blur-3xl rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.06)] p-2 flex items-center gap-2 transition-all border border-white/80 focus-within:border-gray-300 focus-within:shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
