@@ -159,15 +159,15 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
   const chunksLimitReached = currentTotalChunks >= MAX_CHUNKS;
 
   return (
-    <div className="min-h-screen bg-background relative isolate flex items-center justify-center p-4 overflow-hidden">
-      <div className="absolute top-4 right-4 z-20 rounded-xl bg-card/70 border border-line/60 backdrop-blur-md"><ThemeToggle /></div>
-      <div className="absolute inset-0 pointer-events-none -z-10">
+    <div className="h-dvh bg-background relative isolate flex p-4 overflow-y-auto overflow-x-hidden">
+      <div className="fixed top-3 right-3 md:top-4 md:right-4 z-20 rounded-xl bg-card/70 border border-line/60 backdrop-blur-md"><ThemeToggle /></div>
+      <div className="fixed inset-0 pointer-events-none -z-10">
         <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-secondary-fixed opacity-30 dark:bg-cyan-500/20 dark:opacity-100 blur-3xl"></div>
         <div className="absolute top-1/4 -right-40 w-[500px] h-[500px] rounded-full bg-tertiary-fixed opacity-20 dark:bg-fuchsia-500/20 dark:opacity-100 blur-3xl"></div>
         <div className="absolute -bottom-40 left-1/3 w-[700px] h-[400px] rounded-full bg-primary-fixed opacity-30 dark:bg-violet-600/30 dark:opacity-100 blur-3xl"></div>
       </div>
 
-      <div className="relative z-10 w-full max-w-2xl flex flex-col items-center">
+      <div className="relative z-10 w-full max-w-2xl flex flex-col items-center m-auto py-10">
         
         <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary-fixed text-primary font-label-md text-label-md font-bold uppercase tracking-widest mb-8 shadow-sm">
           <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
@@ -183,7 +183,7 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
           </p>
         </div>
 
-        <div className="w-full bg-surface-container-lowest/90 glow backdrop-blur-xl rounded-[2rem] p-6 shadow-lg border border-surface-container">
+        <div className="w-full bg-surface-container-lowest/90 glow backdrop-blur-xl rounded-[2rem] p-4 sm:p-6 shadow-lg border border-surface-container">
           
           {uploadedDocs.length > 0 && (
             <div className="mb-6">

@@ -59,7 +59,7 @@ export default function MessageBubble({
   if (isUser) {
     return (
       <div className="flex justify-end items-start gap-3 w-full mt-4">
-        <div className="flex flex-col items-end max-w-xl gap-1">
+        <div className="flex flex-col items-end max-w-[80%] md:max-w-xl gap-1 min-w-0 break-words">
           <div className="bg-brand py-2.5 px-4 rounded-3xl rounded-br-sm shadow-md shadow-primary/20">
             {renderUserMessage(message.content)}
           </div>
@@ -76,11 +76,11 @@ export default function MessageBubble({
   }
 
   return (
-    <div className="flex items-start gap-4 w-full">
+    <div className="flex items-start gap-3 md:gap-4 w-full min-w-0">
       <div className="w-9 h-9 rounded-2xl bg-brand flex items-center justify-center shadow-md shadow-primary/25 shrink-0 mt-1">
         <Sparkles size={16} />
       </div>
-      <div className="flex-1 py-1 flex flex-col gap-2 transition-all">
+      <div className="flex-1 min-w-0 py-1 flex flex-col gap-2 transition-all break-words">
         
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-space-xs">
@@ -95,7 +95,7 @@ export default function MessageBubble({
         </div>
 
         {message.content && (
-          <div className="flex items-center justify-between pt-space-sm  mt-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-space-sm  mt-2">
             <div className="flex items-center gap-space-xs">
               <button aria-label="Helpful" className="p-1.5 flex items-center justify-center text-outline hover:text-green-500 transition-colors" type="button">
                 <ThumbsUp size={14} />

@@ -43,7 +43,18 @@ export default function ChatContainer({
   const [addingDoc, setAddingDoc] = useState(false);
   const [addDocError, setAddDocError] = useState<string | null>(null);
   const [activeSource, setActiveSource] = useState<ActiveSource | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [collapsedPref, setCollapsedPref] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  // On phones the sidebar is an off-canvas drawer and is never "collapsed".
+  const isCollapsed = collapsedPref && !isMobile;
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const sync = () => { setIsMobile(mq.matches); if (!mq.matches) setMobileOpen(false); };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [selectedModel, setSelectedModel] = useState("gemini-3.8-flash");
   const isDark = useIsDark();
@@ -64,6 +75,7 @@ export default function ChatContainer({
   }, []);
 
   const handleLoadChat = async (id: string) => {
+    setMobileOpen(false);
     setChatId(id);
     try {
       const res = await fetch(`/api/chats/${id}`);
@@ -83,6 +95,7 @@ export default function ChatContainer({
   const handleNewChat = async () => {
     if (!chatId) { onReset(); return; } // nothing linked yet: fall back to the upload screen
     if (startingChat || chatLoading) return;
+    setMobileOpen(false);
     setStartingChat(true);
     setChatError(null);
     try {
@@ -343,7 +356,8 @@ export default function ChatContainer({
         <div className="absolute -bottom-40 left-1/3 w-96 h-96 rounded-xl bg-primary-fixed opacity-30 dark:bg-cyan-500/20 dark:opacity-100 blur-3xl"></div>
       </div>
 
-      <aside className={`fixed left-4 top-4 bottom-4 h-[calc(100vh-32px)] ${isCollapsed ? 'w-20' : 'w-64'} bg-card/70 backdrop-blur-[40px] border border-line/60 shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.55)] rounded-3xl z-50 flex flex-col p-4 transition-all duration-300`}>
+      {isMobile && mobileOpen && <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden" onClick={() => setMobileOpen(false)} aria-hidden="true" />}
+      <aside className={`fixed left-3 md:left-4 top-3 md:top-4 bottom-3 md:bottom-4 h-[calc(100dvh-24px)] md:h-[calc(100dvh-32px)] max-w-[85vw] ${mobileOpen ? '' : 'max-md:-translate-x-[120%] max-md:pointer-events-none'} ${isCollapsed ? 'w-20' : 'w-64'} bg-card/70 backdrop-blur-[40px] border border-line/60 shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.55)] rounded-3xl z-50 flex flex-col p-4 transition-all duration-300`}>
         <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-3'} py-2 mb-2 transition-all duration-300`}>
           <Sparkles size={18} className="text-muted shrink-0" />
           <span className={`text-[15px] font-medium text-ink truncate transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>DocuMind</span>
@@ -400,24 +414,24 @@ export default function ChatContainer({
         </div>
       </aside>
 
-      <div className={`${isCollapsed ? 'pl-[104px]' : 'pl-[280px]'} flex flex-col h-screen transition-all duration-300`}>
-        <header className="flex-shrink-0 h-14 mt-4 mr-4 bg-card/60 backdrop-blur-[40px] rounded-2xl border border-line/60 shadow-[0_4px_16px_rgba(0,0,0,0.03)] z-40 flex items-center justify-between px-6 sticky top-4 transition-all duration-300">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setIsCollapsed(!isCollapsed)} className="p-2 -ml-2 rounded-xl text-muted hover:bg-hover transition-colors" aria-label="Toggle sidebar">
+      <div className={`${isCollapsed ? 'md:pl-[104px]' : 'md:pl-[280px]'} flex flex-col h-dvh transition-all duration-300`}>
+        <header className="flex-shrink-0 h-14 mt-2 mx-2 md:mx-0 md:mt-4 md:mr-4 bg-card/60 backdrop-blur-[40px] rounded-2xl border border-line/60 shadow-[0_4px_16px_rgba(0,0,0,0.03)] z-40 flex items-center justify-between px-3 md:px-6 gap-2 sticky top-2 md:top-4 transition-all duration-300">
+          <div className="flex items-center gap-2 md:gap-3 min-w-0">
+            <button onClick={() => (isMobile ? setMobileOpen(true) : setCollapsedPref(!collapsedPref))} className="p-2 -ml-2 rounded-xl text-muted hover:bg-hover transition-colors" aria-label="Toggle sidebar">
               <PanelLeft size={18} />
             </button>
-            <div className="flex items-center gap-2 text-muted">
-              <FileText size={16} className="" />
-              <span className="text-[13px] font-medium text-ink">{currentDocs.length > 1 ? `${currentDocs.length} Documents` : currentDocs[0].fileName}</span>
+            <div className="flex items-center gap-2 text-muted min-w-0">
+              <FileText size={16} className="shrink-0" />
+              <span className="text-[13px] font-medium text-ink truncate max-w-[110px] sm:max-w-[260px] md:max-w-none">{currentDocs.length > 1 ? `${currentDocs.length} Documents` : currentDocs[0].fileName}</span>
               <span className="text-[11px] hidden sm:inline-block">({docInfo.pageCount} Pages)</span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
             <div className="relative">
               <select 
                 value={selectedModel}
                 onChange={(e) => setSelectedModel(e.target.value)}
-                className="appearance-none bg-surface-container-low border border-line text-muted text-[12px] font-medium rounded-lg px-3 py-1.5 pr-8 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors cursor-pointer"
+                className="appearance-none max-w-[120px] sm:max-w-none bg-surface-container-low border border-line text-muted text-[12px] font-medium rounded-lg pl-2 sm:pl-3 py-1.5 pr-7 sm:pr-8 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors cursor-pointer"
               >
                 <option value="gemini-3.8-flash">⚡ Gemini 3.8 Flash (Fast)</option>
                 <option value="gemini-3.7-flash">🧠 Gemini 3.7 Flash</option>
@@ -429,7 +443,7 @@ export default function ChatContainer({
               </div>
             </div>
             <ThemeToggle />
-            <button aria-label="Notifications" className="w-8 h-8 rounded-xl flex items-center justify-center text-muted hover:bg-hover transition-colors" type="button">
+            <button aria-label="Notifications" className="hidden sm:flex w-8 h-8 rounded-xl flex items-center justify-center text-muted hover:bg-hover transition-colors" type="button">
               <Bell size={18} className="" />
             </button>
           </div>
@@ -441,7 +455,7 @@ export default function ChatContainer({
           </div>
         )}
 
-        <main ref={scrollAreaRef} className="flex-1 w-full px-gutter bg-transparent overflow-y-auto">
+        <main ref={scrollAreaRef} className="flex-1 w-full px-3 md:px-gutter bg-transparent overflow-y-auto">
           <div className="flex flex-col w-full relative min-h-full pb-[200px]">
             <div className="max-w-4xl w-full mx-auto flex flex-col gap-y-space-lg pt-6">
               
@@ -512,7 +526,7 @@ export default function ChatContainer({
           </div>
         </main>
 
-        <div className={`fixed bottom-8 ${isCollapsed ? 'left-[112px]' : 'left-[280px]'} right-0 z-40 px-gutter pointer-events-none flex flex-col items-center transition-all duration-300`}>
+        <div className={`fixed bottom-3 md:bottom-8 left-0 ${isCollapsed ? 'md:left-[112px]' : 'md:left-[280px]'} right-0 z-30 px-3 md:px-gutter pb-[env(safe-area-inset-bottom)] pointer-events-none flex flex-col items-center transition-all duration-300`}>
           <div className="max-w-3xl w-full flex flex-col gap-space-xs pointer-events-auto">
             {isStreaming && (
               <div className="flex justify-center mb-2">
@@ -525,12 +539,12 @@ export default function ChatContainer({
                 </button>
               </div>
             )}
-            <form onSubmit={handleSend} className="w-full bg-card/90 glow backdrop-blur-3xl rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] p-2 flex items-center gap-2 transition-all border border-line/70 focus-within:border-primary/50 focus-within:shadow-[0_8px_32px_rgba(70,72,212,0.15)]">
+            <form onSubmit={handleSend} className="w-full bg-card/90 glow backdrop-blur-3xl rounded-[24px] max-md:rounded-[22px] shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] p-2 flex items-center gap-2 transition-all border border-line/70 focus-within:border-primary/50 focus-within:shadow-[0_8px_32px_rgba(70,72,212,0.15)]">
               <button onClick={() => addDocInputRef.current?.click()} disabled={addingDoc} aria-label="Add file or context" className="w-10 h-10 rounded-full flex items-center justify-center bg-hover text-muted hover:text-ink hover:bg-line transition-colors shrink-0" type="button">
                 <Plus size={20} className="" />
               </button>
-              <input ref={inputRef} value={inputValue} onChange={(e) => setInputValue(e.target.value)} disabled={chatLoading || addingDoc} className="flex-1 bg-transparent px-space-sm py-2 font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" placeholder={chatLoading ? "Synthesizing query with DocuMind AI..." : `Ask anything about ${currentDocs.length > 1 ? `${currentDocs.length} documents` : currentDocs[0].fileName}...`} type="text"/>
-              <button aria-label="Voice input" className="w-9 h-9 rounded-full flex items-center justify-center text-outline hover:text-ink hover:bg-hover transition-colors shrink-0" type="button">
+              <input ref={inputRef} value={inputValue} onChange={(e) => setInputValue(e.target.value)} disabled={chatLoading || addingDoc} className="flex-1 min-w-0 bg-transparent px-space-sm py-2 text-[16px] md:text-[14px] font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" placeholder={chatLoading ? "Synthesizing query with DocuMind AI..." : `Ask anything about ${currentDocs.length > 1 ? `${currentDocs.length} documents` : currentDocs[0].fileName}...`} type="text"/>
+              <button aria-label="Voice input" className="hidden sm:flex w-9 h-9 rounded-full flex items-center justify-center text-outline hover:text-ink hover:bg-hover transition-colors shrink-0" type="button">
                 <Mic size={20} className="" />
               </button>
               <button disabled={!canSend} aria-label="Send query" className="w-10 h-10 rounded-full bg-brand flex items-center justify-center shadow-md shadow-primary/30 hover:brightness-110 transition-all shrink-0 disabled:opacity-30 disabled:hover:scale-100" type="submit">
