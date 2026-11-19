@@ -114,9 +114,20 @@ ANSWER:`;
     }
 
     const requestedModel = model || "gemini-3.8-flash";
-    const candidateModels = [requestedModel, "gemini-3.8-flash", "gemini-3.7-flash", "gemini-2.5-flash", "gemini-pro-latest"];
+    // Fallback order: the user's pick first, then fast/stable models. Lite models are
+    // last-resort because the bigger Flash models are sometimes overloaded (503/timeout).
+    const candidateModels = [
+      requestedModel,
+      "gemini-3.8-flash",
+      "gemini-3.7-flash",
+      "gemini-flash-latest",
+      "gemini-flash-lite-latest",
+      "gemini-3.1-flash-lite",
+      "gemini-2.5-flash-lite",
+    ];
     const uniqueModels = [...new Set(candidateModels)];
-    
+    const MODEL_TIMEOUT_MS = 12000;
+
     let streamResult: any = null;
     let successfulModelName = "";
 
@@ -124,7 +135,12 @@ ANSWER:`;
       try {
         console.log(`[/api/chat] Requesting streaming answer from '${modelName}'...`);
         const generativeModel = genAI.getGenerativeModel({ model: modelName });
-        streamResult = await generativeModel.generateContentStream(prompt);
+        streamResult = await Promise.race([
+          generativeModel.generateContentStream(prompt),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error(`timeout after ${MODEL_TIMEOUT_MS}ms`)), MODEL_TIMEOUT_MS)
+          ),
+        ]);
         successfulModelName = modelName;
         break;
       } catch (err: any) {
