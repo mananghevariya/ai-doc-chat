@@ -6,6 +6,7 @@ import { Sparkles, Plus, Search, MessageSquare, PlusCircle, Share, FileText, X, 
 import { ActiveSource, DocInfo, DocumentItem, Message, ChatResponse } from "@/app/types";
 import { SpinnerTeal, ErrorBanner, TypingDots } from "../ui/Feedback";
 import MessageBubble from "./MessageBubble";
+import { parseSources } from "@/lib/rag";
 
 interface ChatContainerProps {
   docInfo: DocInfo;
@@ -216,14 +217,7 @@ export default function ChatContainer({
         if (splitIdx !== -1) {
           const sourceStr = accumulatedText.substring(splitIdx + "===SOURCES===".length).trim();
           try {
-            let cleanStr = sourceStr.replace(/```json/g, "").replace(/```/g, "").trim();
-            const match = cleanStr.match(/\[([\d\s,]*)\]/);
-            let indexes: number[] = [];
-            if (match && match[1]) {
-              indexes = match[1].split(",").map(s => parseInt(s.trim())).filter(n => !isNaN(n));
-            } else {
-              indexes = JSON.parse(cleanStr);
-            }
+            const indexes = parseSources(sourceStr);
             setMessages((p) => p.map(m => m.id === msgId ? { ...m, sourceChunkIndexes: indexes } : m));
           } catch (e) {
             console.error("Failed to parse sources:", sourceStr);

@@ -8,37 +8,11 @@ if (typeof (globalThis as any).DOMMatrix === "undefined") {
 }
 
 import { extractText } from "unpdf";
+import { splitIntoChunks } from "@/lib/rag";
 
 export const runtime = "nodejs";
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
-
-/**
- * Splits a long string into overlapping chunks for RAG-style context windows.
- * @param text       - Full extracted text
- * @param chunkSize  - Target number of characters per chunk (default 1000)
- * @param overlap    - Number of characters to repeat between adjacent chunks (default 200)
- */
-function splitIntoChunks(
-  text: string,
-  chunkSize = 1000,
-  overlap = 200
-): string[] {
-  const chunks: string[] = [];
-  let start = 0;
-
-  while (start < text.length) {
-    const end = Math.min(start + chunkSize, text.length);
-    const chunk = text.slice(start, end).trim();
-    if (chunk.length > 0) {
-      chunks.push(chunk);
-    }
-    if (end >= text.length) break;
-    start += chunkSize - overlap;
-  }
-
-  return chunks;
-}
 
 export async function POST(req: NextRequest) {
   try {

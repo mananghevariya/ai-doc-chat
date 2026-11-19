@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { query } from "@/lib/prisma";
+import {
+  TOP_K,
+  buildContext,
+  buildPrompt,
+  generateWithFallback,
+  getModelOrder,
+  shouldSendWholeDocument,
+  MODEL_TIMEOUT_MS,
+} from "@/lib/rag";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -75,7 +84,6 @@ export async function POST(req: NextRequest) {
       
       // Small documents (e.g. a resume): send ALL chunks in reading order so the model
       // sees the whole document. Larger ones: top-8 chunks by vector similarity.
-      const SMALL_DOC_CHUNKS = 12;
       const countResult = await query(
         `SELECT COUNT(*)::int AS n FROM "DocumentChunk" WHERE "documentId" = ANY($1::text[])`,
         [documentIds]
@@ -83,7 +91,7 @@ export async function POST(req: NextRequest) {
       const totalChunks: number = countResult.rows[0]?.n ?? 0;
 
       const searchResult =
-        totalChunks > 0 && totalChunks <= SMALL_DOC_CHUNKS
+        shouldSendWholeDocument(totalChunks)
           ? await query(`
               SELECT content, "pageNumber",
                      1 - (embedding <=> $1::vector) as similarity
@@ -97,74 +105,34 @@ export async function POST(req: NextRequest) {
               FROM "DocumentChunk"
               WHERE "documentId" = ANY($2::text[])
               ORDER BY embedding <=> $1::vector
-              LIMIT 8;
+              LIMIT ${TOP_K};
             `, [qVector, documentIds]);
 
       const relevantChunks = searchResult.rows;
 
       if (relevantChunks.length > 0) {
-        indexedContext = relevantChunks
-          .map((row, idx) => `[Source Paragraph ${idx + 1}, Relevance: ${(row.similarity * 100).toFixed(1)}%]\n${row.content}`)
-          .join("\n\n---\n\n");
+        // Paragraphs are labelled with their real chunk number (pageNumber), so the
+        // citations the model returns match the chunks the UI shows.
+        indexedContext = buildContext(relevantChunks);
       }
     }
 
     // 3. Prepare the Prompt
-    let prompt = question;
-    if (indexedContext) {
-      prompt = `You are an advanced AI assistant connected to a document search system.
+    const prompt = buildPrompt(question, indexedContext);
 
-Rules you must follow:
-1. If the user asks a question about the document, answer using ONLY the retrieved document context below. Do not invent details.
-2. If the user asks a general question, greeting, or asks you to "summarize" the document, you may synthesize information across the relevant paragraphs and give a helpful response.
-3. Identify which Source Paragraph number(s) were directly used to answer the question.
-4. If the user asks for specific facts that are genuinely not in the context, say exactly: "I couldn't find that information in the provided document(s)."
-5. ALWAYS append exactly "===SOURCES===" on a new line at the very end of your answer, followed immediately by a JSON array of the Source Paragraph numbers you directly used (e.g., [1, 2]). If you didn't use any chunks, output []. Do not include the word "chunk" inside the array, only the numbers.
-
-RETRIEVED DOCUMENT CONTEXT:
----
-${indexedContext}
----
-
-USER QUESTION: ${question.trim()}
-
-ANSWER:`;
-    }
-
-    const requestedModel = model || "gemini-3.8-flash";
-    // Fallback order: the user's pick first, then fast/stable models. Lite models are
-    // last-resort because the bigger Flash models are sometimes overloaded (503/timeout).
-    const candidateModels = [
-      requestedModel,
-      "gemini-3.8-flash",
-      "gemini-3.1-flash-lite",
-      "gemini-flash-lite-latest",
-      "gemini-3.7-flash",
-      "gemini-flash-latest",
-      "gemini-2.5-flash-lite",
-    ];
-    const uniqueModels = [...new Set(candidateModels)];
-    const MODEL_TIMEOUT_MS = 8000;
-
-    let streamResult: any = null;
-    let successfulModelName = "";
-
-    for (const modelName of uniqueModels) {
-      try {
+    // 4. Pick a model: the user's choice first, then fast fallbacks, each with a timeout
+    const attemptResult = await generateWithFallback(
+      getModelOrder(model),
+      (modelName) => {
         console.log(`[/api/chat] Requesting streaming answer from '${modelName}'...`);
-        const generativeModel = genAI.getGenerativeModel({ model: modelName });
-        streamResult = await Promise.race([
-          generativeModel.generateContentStream(prompt),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error(`timeout after ${MODEL_TIMEOUT_MS}ms`)), MODEL_TIMEOUT_MS)
-          ),
-        ]);
-        successfulModelName = modelName;
-        break;
-      } catch (err: any) {
-        console.error(`[/api/chat] Error with model '${modelName}':`, err?.message || err);
-      }
-    }
+        return genAI.getGenerativeModel({ model: modelName }).generateContentStream(prompt);
+      },
+      MODEL_TIMEOUT_MS,
+      (modelName, err: any) => console.error(`[/api/chat] Error with model '${modelName}':`, err?.message || err)
+    );
+
+    const streamResult: any = attemptResult?.result ?? null;
+    const successfulModelName = attemptResult?.model ?? "";
 
     if (!streamResult) {
       return NextResponse.json({ error: "Failed to get a response from the AI." }, { status: 500 });
