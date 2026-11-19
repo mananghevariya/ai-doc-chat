@@ -3,6 +3,7 @@
 import React, { useState, useRef, useCallback } from "react";
 import { DocInfo, DocumentItem } from "@/app/types";
 import { SpinnerTeal, ErrorBanner } from "../ui/Feedback";
+import ThemeToggle from "../ui/ThemeToggle";
 
 interface UploadZoneProps {
   onUploadSuccess: (info: DocInfo) => void;
@@ -143,6 +144,7 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
 
   return (
     <div className="min-h-screen bg-background relative flex items-center justify-center p-4 overflow-hidden">
+      <div className="absolute top-4 right-4 z-20 rounded-xl bg-card/70 border border-line/60 backdrop-blur-md"><ThemeToggle /></div>
       <div className="absolute inset-0 pointer-events-none -z-10">
         <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-secondary-fixed opacity-30 blur-3xl"></div>
         <div className="absolute top-1/4 -right-40 w-[500px] h-[500px] rounded-full bg-tertiary-fixed opacity-20 blur-3xl"></div>

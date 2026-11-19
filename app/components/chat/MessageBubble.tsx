@@ -64,7 +64,7 @@ export default function MessageBubble({
             {renderUserMessage(message.content)}
           </div>
           <div className="flex items-center gap-1 mt-1 pr-1 opacity-60">
-            <span className="text-[10px] uppercase font-medium text-gray-500 tracking-wide">Delivered</span>
+            <span className="text-[10px] uppercase font-medium text-muted tracking-wide">Delivered</span>
             <CheckCheck size={14} className="text-primary" />
           </div>
         </div>
@@ -84,7 +84,7 @@ export default function MessageBubble({
         
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-space-xs">
-            <span className="font-semibold text-[14px] text-[#1f1f1f] tracking-wide">DocuMind AI</span>
+            <span className="font-semibold text-[14px] text-ink tracking-wide">DocuMind AI</span>
           </div>
         </div>
         
@@ -97,18 +97,18 @@ export default function MessageBubble({
         {message.content && (
           <div className="flex items-center justify-between pt-space-sm  mt-2">
             <div className="flex items-center gap-space-xs">
-              <button aria-label="Helpful" className="p-1.5 flex items-center justify-center text-gray-400 hover:text-green-600 transition-colors" type="button">
+              <button aria-label="Helpful" className="p-1.5 flex items-center justify-center text-outline hover:text-green-500 transition-colors" type="button">
                 <ThumbsUp size={14} />
               </button>
-              <button aria-label="Not helpful" className="p-1.5 flex items-center justify-center text-gray-400 hover:text-red-600 transition-colors" type="button">
+              <button aria-label="Not helpful" className="p-1.5 flex items-center justify-center text-outline hover:text-red-500 transition-colors" type="button">
                 <ThumbsDown size={14} />
               </button>
-              <button onClick={handleCopy} aria-label="Copy summary" className="p-1.5 flex items-center justify-center text-gray-400 hover:text-gray-800 transition-colors" type="button">
+              <button onClick={handleCopy} aria-label="Copy summary" className="p-1.5 flex items-center justify-center text-outline hover:text-ink transition-colors" type="button">
                 {copied ? <Check size={14} /> : <Copy size={14} />}
               </button>
               {copied && <span className="text-primary font-label-sm text-label-sm ml-2">Copied!</span>}
             </div>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-800 text-[12px] font-medium transition-colors" type="button">
+            <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-line text-muted hover:bg-hover hover:text-ink text-[12px] font-medium transition-colors" type="button">
               <BookmarkPlus size={14} />
               <span>Save to Canvas</span>
             </button>

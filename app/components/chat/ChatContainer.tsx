@@ -2,10 +2,11 @@
 import { UserButton } from "@clerk/nextjs";
 
 import React, { useState, useRef, useEffect, FormEvent } from "react";
-import { Sparkles, Plus, Search, MessageSquare, PlusCircle, Share, FileText, X, Settings, Sun, Bell, Mic, ArrowUp, BookOpen, Zap, ListChecks, PanelLeft } from 'lucide-react';
+import { Sparkles, Plus, Search, MessageSquare, PlusCircle, Share, FileText, X, Settings, Bell, Mic, ArrowUp, BookOpen, Zap, ListChecks, PanelLeft } from 'lucide-react';
 import { ActiveSource, DocInfo, DocumentItem, Message, ChatResponse } from "@/app/types";
 import { SpinnerTeal, ErrorBanner, TypingDots } from "../ui/Feedback";
 import MessageBubble from "./MessageBubble";
+import ThemeToggle, { useIsDark } from "../ui/ThemeToggle";
 import { parseSources } from "@/lib/rag";
 
 interface ChatContainerProps {
@@ -45,6 +46,7 @@ export default function ChatContainer({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [chatHistory, setChatHistory] = useState<any[]>([]);
   const [selectedModel, setSelectedModel] = useState("gemini-3.8-flash");
+  const isDark = useIsDark();
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -331,9 +333,9 @@ export default function ChatContainer({
   return (
     
     <>
-      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden bg-[#fafbfc]">
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden bg-background">
         
-              <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-100/60 rounded-full blur-[100px] opacity-80 mix-blend-multiply">
+              <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-100/60 dark:bg-primary/20 rounded-full blur-[100px] opacity-80 mix-blend-multiply dark:mix-blend-normal">
       </div>
     
       
@@ -341,19 +343,19 @@ export default function ChatContainer({
         <div className="absolute -bottom-40 left-1/3 w-96 h-96 rounded-xl bg-primary-fixed opacity-30 blur-3xl"></div>
       </div>
 
-      <aside className={`fixed left-4 top-4 bottom-4 h-[calc(100vh-32px)] ${isCollapsed ? 'w-20' : 'w-64'} bg-white/70 backdrop-blur-[40px] border border-gray-200/50 shadow-[0_8px_32px_rgba(0,0,0,0.06)] rounded-3xl z-50 flex flex-col p-4 transition-all duration-300`}>
+      <aside className={`fixed left-4 top-4 bottom-4 h-[calc(100vh-32px)] ${isCollapsed ? 'w-20' : 'w-64'} bg-card/70 backdrop-blur-[40px] border border-line/60 shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.55)] rounded-3xl z-50 flex flex-col p-4 transition-all duration-300`}>
         <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-3'} py-2 mb-2 transition-all duration-300`}>
-          <Sparkles size={18} className="text-[#444746] shrink-0" />
-          <span className={`text-[15px] font-medium text-[#1f1f1f] truncate transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>DocuMind</span>
+          <Sparkles size={18} className="text-muted shrink-0" />
+          <span className={`text-[15px] font-medium text-ink truncate transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>DocuMind</span>
         </div>
 
         <div className="mb-4 flex flex-col gap-2">
-          <button onClick={handleNewChat} disabled={startingChat} className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-center gap-2'} bg-white border border-gray-200/50 hover:bg-gray-50 text-[#1f1f1f] py-2.5 ${isCollapsed ? 'px-0' : 'px-4'} rounded-xl shadow-sm transition-all active:scale-[0.98]`} type="button">
+          <button onClick={handleNewChat} disabled={startingChat} className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-center gap-2'} bg-card border border-line/60 hover:bg-hover text-ink py-2.5 ${isCollapsed ? 'px-0' : 'px-4'} rounded-xl shadow-sm transition-all active:scale-[0.98]`} type="button">
             <Plus size={16} className="shrink-0" />
             <span className={`text-[13px] font-medium transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>New Chat</span>
           </button>
           
-          <button onClick={() => addDocInputRef.current?.click()} disabled={addingDoc} className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-center gap-2'} bg-[#0f1115] hover:bg-[#1a1d24] text-white py-2.5 ${isCollapsed ? 'px-0' : 'px-4'} rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.15)] transition-all active:scale-[0.98]`} type="button">
+          <button onClick={() => addDocInputRef.current?.click()} disabled={addingDoc} className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-center gap-2'} bg-[#0f1115] hover:bg-[#1a1d24] dark:bg-primary dark:hover:bg-primary-container dark:text-on-primary text-white py-2.5 ${isCollapsed ? 'px-0' : 'px-4'} rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.15)] transition-all active:scale-[0.98]`} type="button">
             {addingDoc ? <SpinnerTeal size="sm" /> : <FileText size={16} className="shrink-0" />}
             <span className={`text-[13px] font-medium transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>{addingDoc ? "Uploading..." : "Upload Document"}</span>
           </button>
@@ -362,23 +364,23 @@ export default function ChatContainer({
 
         <div className={`mb-4 ${isCollapsed ? 'px-0' : 'px-2'}`}>
           <div className="relative flex items-center justify-center">
-            <Search size={16} className={`text-[#444746] transition-all duration-300 ${isCollapsed ? '' : 'absolute left-3'}`} />
-            <input className={`transition-all duration-300 bg-transparent text-[#1f1f1f] placeholder:text-[#444746] focus:outline-none focus:bg-[#f0f4f9] border border-transparent focus:border-[#747775] rounded-xl ${isCollapsed ? 'w-0 opacity-0 p-0 overflow-hidden' : 'w-full pl-9 pr-3 py-1.5 hover:bg-[#f0f4f9] text-[13px]'}`} placeholder="Search chats" type="text" tabIndex={isCollapsed ? -1 : 0}/>
+            <Search size={16} className={`text-muted transition-all duration-300 ${isCollapsed ? '' : 'absolute left-3'}`} />
+            <input className={`transition-all duration-300 bg-transparent text-ink placeholder:text-muted focus:outline-none focus:bg-hover border border-transparent focus:border-outline rounded-xl ${isCollapsed ? 'w-0 opacity-0 p-0 overflow-hidden' : 'w-full pl-9 pr-3 py-1.5 hover:bg-hover text-[13px]'}`} placeholder="Search chats" type="text" tabIndex={isCollapsed ? -1 : 0}/>
           </div>
         </div>
 
         <div className={`flex-1 overflow-y-auto scrollbar-none ${isCollapsed ? 'px-0' : 'px-2'}`}>
           <nav className="flex flex-col gap-1 mb-6">
-            <a onClick={handleExportChat} className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl transition-colors text-[#444746] hover:bg-[#f0f4f9] hover:text-[#1f1f1f] cursor-pointer`} href="#">
+            <a onClick={handleExportChat} className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl transition-colors text-muted hover:bg-hover hover:text-ink cursor-pointer`} href="#">
               <Share size={16} className="shrink-0" />
               <span className={`text-[13px] transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>Export Chat</span>
             </a>
           </nav>
 
-          <span className={`px-3 text-[11px] font-medium text-[#444746] mb-2 block tracking-wide transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden whitespace-nowrap' : 'opacity-100'}`}>Recent Chats</span>
+          <span className={`px-3 text-[11px] font-medium text-muted mb-2 block tracking-wide transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden whitespace-nowrap' : 'opacity-100'}`}>Recent Chats</span>
           <div className="flex flex-col gap-1">
             {chatHistory.map(chat => (
-              <div key={chat.id} title={isCollapsed ? chat.title : undefined} onClick={() => handleLoadChat(chat.id)} className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl hover:bg-[#f0f4f9] text-[#444746] hover:text-[#1f1f1f] transition-colors cursor-pointer group ${chat.id === chatId ? 'bg-[#f0f4f9] text-[#1f1f1f]' : ''}`}>
+              <div key={chat.id} title={isCollapsed ? chat.title : undefined} onClick={() => handleLoadChat(chat.id)} className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3 px-3'} py-2 rounded-xl hover:bg-hover text-muted hover:text-ink transition-colors cursor-pointer group ${chat.id === chatId ? 'bg-hover text-ink' : ''}`}>
                 <MessageSquare size={16} className="shrink-0" />
                 <span className={`text-[13px] truncate flex-1 transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>{chat.title}</span>
               </div>
@@ -387,11 +389,11 @@ export default function ChatContainer({
         </div>
 
         <div className="mt-auto pt-2">
-          <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between p-2'} rounded-xl hover:bg-[#f0f4f9] cursor-pointer transition-colors`}>
+          <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between p-2'} rounded-xl hover:bg-hover cursor-pointer transition-colors`}>
             <div className={`flex items-center gap-3 overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 hidden' : 'w-auto opacity-100'}`}>
-              <div className="w-7 h-7 flex items-center justify-center shrink-0"><UserButton appearance={{ elements: { userButtonAvatarBox: "w-7 h-7" } }} /></div><span className="text-[13px] font-medium text-[#1f1f1f] truncate">User Profile</span>
+              <div className="w-7 h-7 flex items-center justify-center shrink-0"><UserButton appearance={{ variables: isDark ? { colorBackground: "#14141f", colorForeground: "#ececf8", colorMutedForeground: "#a6a5c2", colorPrimary: "#7f82ff", colorNeutral: "#ececf8", colorInput: "#1a1a2b", colorInputForeground: "#ececf8" } : undefined, elements: { userButtonAvatarBox: "w-7 h-7" } }} /></div><span className="text-[13px] font-medium text-ink truncate">User Profile</span>
             </div>
-            <button aria-label="Account settings" className={`flex items-center justify-center text-[#444746] hover:text-[#1f1f1f] transition-colors shrink-0 ${isCollapsed ? 'w-full h-full p-2' : 'pr-1'}`} type="button">
+            <button aria-label="Account settings" className={`flex items-center justify-center text-muted hover:text-ink transition-colors shrink-0 ${isCollapsed ? 'w-full h-full p-2' : 'pr-1'}`} type="button">
               <Settings size={18} className="" />
             </button>
           </div>
@@ -399,14 +401,14 @@ export default function ChatContainer({
       </aside>
 
       <div className={`${isCollapsed ? 'pl-[104px]' : 'pl-[280px]'} flex flex-col h-screen transition-all duration-300`}>
-        <header className="flex-shrink-0 h-14 mt-4 mr-4 bg-white/60 backdrop-blur-[40px] rounded-2xl border border-gray-200/50 shadow-[0_4px_16px_rgba(0,0,0,0.03)] z-40 flex items-center justify-between px-6 sticky top-4 transition-all duration-300">
+        <header className="flex-shrink-0 h-14 mt-4 mr-4 bg-card/60 backdrop-blur-[40px] rounded-2xl border border-line/60 shadow-[0_4px_16px_rgba(0,0,0,0.03)] z-40 flex items-center justify-between px-6 sticky top-4 transition-all duration-300">
           <div className="flex items-center gap-3">
-            <button onClick={() => setIsCollapsed(!isCollapsed)} className="p-2 -ml-2 rounded-xl text-[#444746] hover:bg-[#f0f4f9] transition-colors" aria-label="Toggle sidebar">
+            <button onClick={() => setIsCollapsed(!isCollapsed)} className="p-2 -ml-2 rounded-xl text-muted hover:bg-hover transition-colors" aria-label="Toggle sidebar">
               <PanelLeft size={18} />
             </button>
-            <div className="flex items-center gap-2 text-[#444746]">
+            <div className="flex items-center gap-2 text-muted">
               <FileText size={16} className="" />
-              <span className="text-[13px] font-medium text-[#1f1f1f]">{currentDocs.length > 1 ? `${currentDocs.length} Documents` : currentDocs[0].fileName}</span>
+              <span className="text-[13px] font-medium text-ink">{currentDocs.length > 1 ? `${currentDocs.length} Documents` : currentDocs[0].fileName}</span>
               <span className="text-[11px] hidden sm:inline-block">({docInfo.pageCount} Pages)</span>
             </div>
           </div>
@@ -415,21 +417,19 @@ export default function ChatContainer({
               <select 
                 value={selectedModel}
                 onChange={(e) => setSelectedModel(e.target.value)}
-                className="appearance-none bg-surface-container-low border border-gray-200 text-[#444746] text-[12px] font-medium rounded-lg px-3 py-1.5 pr-8 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors cursor-pointer"
+                className="appearance-none bg-surface-container-low border border-line text-muted text-[12px] font-medium rounded-lg px-3 py-1.5 pr-8 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors cursor-pointer"
               >
                 <option value="gemini-3.8-flash">⚡ Gemini 3.8 Flash (Fast)</option>
                 <option value="gemini-3.7-flash">🧠 Gemini 3.7 Flash</option>
                 <option value="gemini-2.5-flash">🚀 Gemini 2.5 Flash</option>
                 <option value="gemini-pro-latest">💎 Gemini Pro (Advanced)</option>
               </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#444746]">
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted">
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
               </div>
             </div>
-            <button className="w-8 h-8 rounded-xl flex items-center justify-center text-[#444746] hover:bg-[#f0f4f9] transition-colors" type="button">
-              <Sun size={18} className="" />
-            </button>
-            <button aria-label="Notifications" className="w-8 h-8 rounded-xl flex items-center justify-center text-[#444746] hover:bg-[#f0f4f9] transition-colors" type="button">
+            <ThemeToggle />
+            <button aria-label="Notifications" className="w-8 h-8 rounded-xl flex items-center justify-center text-muted hover:bg-hover transition-colors" type="button">
               <Bell size={18} className="" />
             </button>
           </div>
@@ -447,19 +447,19 @@ export default function ChatContainer({
               
               {messages.length === 0 && (
                 <section className="w-full min-h-[calc(100vh-300px)] flex flex-col items-center justify-center gap-6 text-center px-2">
-                  <div className="inline-flex items-center gap-2 max-w-full px-4 py-2 rounded-full bg-white/80 border border-gray-200/60 shadow-sm text-[13px] text-on-surface-variant">
+                  <div className="inline-flex items-center gap-2 max-w-full px-4 py-2 rounded-full bg-card/80 border border-line/60 shadow-sm text-[13px] text-on-surface-variant">
                     <FileText size={16} className="text-primary shrink-0" />
                     <span className="truncate font-medium text-on-surface">{currentDocs.length > 1 ? `${currentDocs.length} documents` : currentDocs[0].fileName}</span>
                     <span className="shrink-0">· {docInfo.pageCount} {docInfo.pageCount === 1 ? "page" : "pages"} · {docInfo.wordCount.toLocaleString()} words</span>
                   </div>
-                  <h2 className="text-[28px] sm:text-[32px] font-medium text-[#1f1f1f] leading-tight">
+                  <h2 className="text-[28px] sm:text-[32px] font-medium text-ink leading-tight">
                     Ask anything about {currentDocs.length > 1 ? "these documents" : "this document"}
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
                     {QUICK_PROMPTS.map((p, idx) => {
                       const tint = ["text-primary", "text-secondary", "text-tertiary", "text-primary"][idx % 4];
                       return (
-                        <button key={p.label} onClick={() => sendQuestion(p.label)} disabled={chatLoading || addingDoc} className="flex items-start gap-3 text-left p-4 rounded-2xl bg-white/80 border border-gray-200/60 shadow-sm hover:shadow-md hover:bg-white transition-all disabled:opacity-50" type="button">
+                        <button key={p.label} onClick={() => sendQuestion(p.label)} disabled={chatLoading || addingDoc} className="flex items-start gap-3 text-left p-4 rounded-2xl bg-card/80 border border-line/60 shadow-sm hover:shadow-md hover:bg-card hover:border-primary/40 transition-all disabled:opacity-50" type="button">
                           <span className={`mt-0.5 shrink-0 ${tint}`}>{p.icon}</span>
                           <span className="text-[14px] text-on-surface">{p.label}</span>
                         </button>
@@ -472,7 +472,7 @@ export default function ChatContainer({
               <div className="flex flex-col gap-space-lg w-full" ref={messagesContainerRef}>
                 {messages.length > 0 && (
                   <div className="flex items-center justify-center">
-                    <span className="text-[11px] font-medium text-gray-400 tracking-wider uppercase">
+                    <span className="text-[11px] font-medium text-outline tracking-wider uppercase">
                       Today • {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     </span>
                   </div>
@@ -490,12 +490,12 @@ export default function ChatContainer({
 
                 {chatLoading && (
                   <div className="flex items-start gap-4 w-full">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-gray-800 to-gray-600 flex items-center justify-center shadow-md text-white shrink-0 mt-1">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-primary-container flex items-center justify-center shadow-md text-on-primary shrink-0 mt-1">
                       <Sparkles size={16} />
                     </div>
                     <div className="flex-1 py-1 flex flex-col gap-2 transition-all">
                        <div className="flex items-center gap-space-xs mb-1">
-                         <span className="font-semibold text-[14px] text-[#1f1f1f] tracking-wide">DocuMind AI</span>
+                         <span className="font-semibold text-[14px] text-ink tracking-wide">DocuMind AI</span>
                        </div>
                        <TypingDots />
                     </div>
@@ -518,22 +518,22 @@ export default function ChatContainer({
               <div className="flex justify-center mb-2">
                 <button 
                   onClick={stopGeneration}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 shadow-sm rounded-full text-[13px] font-medium text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-card border border-line shadow-sm rounded-full text-[13px] font-medium text-muted hover:bg-hover hover:text-red-600 transition-colors"
                   type="button"
                 >
                   <X size={16} /> Stop Generation
                 </button>
               </div>
             )}
-            <form onSubmit={handleSend} className="w-full bg-white/90 backdrop-blur-3xl rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.06)] p-2 flex items-center gap-2 transition-all border border-white/80 focus-within:border-gray-300 focus-within:shadow-[0_8px_32px_rgba(0,0,0,0.1)]">
-              <button onClick={() => addDocInputRef.current?.click()} disabled={addingDoc} aria-label="Add file or context" className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 text-gray-500 hover:text-gray-900 hover:bg-gray-200 transition-colors shrink-0" type="button">
+            <form onSubmit={handleSend} className="w-full bg-card/90 backdrop-blur-3xl rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] p-2 flex items-center gap-2 transition-all border border-line/70 focus-within:border-primary/50 focus-within:shadow-[0_8px_32px_rgba(70,72,212,0.15)]">
+              <button onClick={() => addDocInputRef.current?.click()} disabled={addingDoc} aria-label="Add file or context" className="w-10 h-10 rounded-full flex items-center justify-center bg-hover text-muted hover:text-ink hover:bg-line transition-colors shrink-0" type="button">
                 <Plus size={20} className="" />
               </button>
               <input ref={inputRef} value={inputValue} onChange={(e) => setInputValue(e.target.value)} disabled={chatLoading || addingDoc} className="flex-1 bg-transparent px-space-sm py-2 font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none" placeholder={chatLoading ? "Synthesizing query with DocuMind AI..." : `Ask anything about ${currentDocs.length > 1 ? `${currentDocs.length} documents` : currentDocs[0].fileName}...`} type="text"/>
-              <button aria-label="Voice input" className="w-9 h-9 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-colors shrink-0" type="button">
+              <button aria-label="Voice input" className="w-9 h-9 rounded-full flex items-center justify-center text-outline hover:text-ink hover:bg-hover transition-colors shrink-0" type="button">
                 <Mic size={20} className="" />
               </button>
-              <button disabled={!canSend} aria-label="Send query" className="w-10 h-10 rounded-full bg-[#1f1f1f] text-white flex items-center justify-center shadow hover:bg-black transition-all shrink-0 disabled:opacity-30 disabled:hover:scale-100" type="submit">
+              <button disabled={!canSend} aria-label="Send query" className="w-10 h-10 rounded-full bg-ink text-background dark:bg-primary dark:text-on-primary flex items-center justify-center shadow hover:opacity-85 transition-all shrink-0 disabled:opacity-30 disabled:hover:scale-100" type="submit">
                 {chatLoading ? <SpinnerTeal size="sm" /> : <ArrowUp size={20} className="" />}
               </button>
             </form>
