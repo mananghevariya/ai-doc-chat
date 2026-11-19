@@ -2,7 +2,7 @@
 import { UserButton } from "@clerk/nextjs";
 
 import React, { useState, useRef, useEffect, FormEvent } from "react";
-import { Sparkles, Plus, Search, MessageSquare, PlusCircle, Share, FileText, X, Settings, Sun, Bell, Mic, ArrowUp, Eye, BookOpen, DollarSign, Zap, ListChecks, PanelLeft } from 'lucide-react';
+import { Sparkles, Plus, Search, MessageSquare, PlusCircle, Share, FileText, X, Settings, Sun, Bell, Mic, ArrowUp, BookOpen, Zap, ListChecks, PanelLeft } from 'lucide-react';
 import { ActiveSource, DocInfo, DocumentItem, Message, ChatResponse } from "@/app/types";
 import { SpinnerTeal, ErrorBanner, TypingDots } from "../ui/Feedback";
 import MessageBubble from "./MessageBubble";
@@ -26,10 +26,10 @@ function formatBytes(b: number) {
 }
 
 const QUICK_PROMPTS = [
-  { icon: <BookOpen size={16} />, label: "Summarize Key Takeaways" },
-  { icon: <DollarSign size={16} />, label: "Show Financial Highlights" },
-  { icon: <Zap size={16} />, label: "Explain Section 4 simply" },
-  { icon: <ListChecks size={16} />, label: "Generate Action Checklist" },
+  { icon: <BookOpen size={16} />, label: "Summarize this document" },
+  { icon: <ListChecks size={16} />, label: "List the key points" },
+  { icon: <Search size={16} />, label: "What are the main topics?" },
+  { icon: <Zap size={16} />, label: "Extract important names, dates and numbers" },
 ];
 
 export default function ChatContainer({
@@ -460,33 +460,27 @@ export default function ChatContainer({
                         </div>
                         <div className="flex items-center gap-space-xs mt-0.5 text-on-surface-variant font-body-sm text-body-sm">
                           <span className="w-2 h-2 rounded-xl bg-emerald-500 animate-pulse"></span>
-                          <span>Fully Indexed & Verified • ~{docInfo.wordCount.toLocaleString()} words</span>
+                          <span>Ready to chat • ~{docInfo.wordCount.toLocaleString()} words</span>
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-space-xs bg-surface-container-low p-1 rounded-xl self-stretch sm:self-auto justify-end">
-                      <button className="flex items-center gap-1 px-space-md py-1.5 rounded-xl bg-surface-container-lowest text-primary shadow-sm hover:bg-surface-container-high transition-all" type="button">
-                        <Eye size={16} className="" />
-                        <span className="font-label-sm text-label-sm">Inspect Pages</span>
-                      </button>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-space-sm pt-space-xs">
                     <div className="bg-surface-container-low/70 rounded-2xl p-space-sm flex flex-col">
-                      <span className="font-label-sm text-label-sm text-outline">Confidence Score</span>
-                      <span className="font-headline-sm text-headline-sm text-primary font-bold">High</span>
+                      <span className="font-label-sm text-label-sm text-outline">Pages</span>
+                      <span className="font-headline-sm text-headline-sm text-primary font-bold">{docInfo.pageCount}</span>
                     </div>
                     <div className="bg-surface-container-low/70 rounded-2xl p-space-sm flex flex-col">
-                      <span className="font-label-sm text-label-sm text-outline">Key Citations</span>
-                      <span className="font-headline-sm text-headline-sm text-secondary font-bold">Enabled</span>
+                      <span className="font-label-sm text-label-sm text-outline">Words</span>
+                      <span className="font-headline-sm text-headline-sm text-secondary font-bold">{docInfo.wordCount.toLocaleString()}</span>
                     </div>
                     <div className="bg-surface-container-low/70 rounded-2xl p-space-sm flex flex-col">
-                      <span className="font-label-sm text-label-sm text-outline">Total Chunks</span>
-                      <span className="font-headline-sm text-headline-sm text-on-surface font-bold truncate">{docInfo.chunks.length}</span>
+                      <span className="font-label-sm text-label-sm text-outline">Reading time</span>
+                      <span className="font-headline-sm text-headline-sm text-on-surface font-bold truncate">~{Math.max(1, Math.round(docInfo.wordCount / 200))} min</span>
                     </div>
                     <div className="bg-surface-container-low/70 rounded-2xl p-space-sm flex flex-col">
-                      <span className="font-label-sm text-label-sm text-outline">Risk Factor</span>
-                      <span className="font-headline-sm text-headline-sm text-tertiary font-bold">Low</span>
+                      <span className="font-label-sm text-label-sm text-outline">Documents</span>
+                      <span className="font-headline-sm text-headline-sm text-tertiary font-bold">{currentDocs.length}</span>
                     </div>
                   </div>
                 </section>
