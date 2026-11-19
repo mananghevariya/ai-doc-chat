@@ -76,6 +76,41 @@ export default function ChatContainer({
     }
   };
 
+  // "New Chat": start an empty chat about the SAME document(s), no re-upload needed.
+  const [startingChat, setStartingChat] = useState(false);
+  const handleNewChat = async () => {
+    if (!chatId) { onReset(); return; } // nothing linked yet: fall back to the upload screen
+    if (startingChat || chatLoading) return;
+    setStartingChat(true);
+    setChatError(null);
+    try {
+      const res = await fetch("/api/chats/new", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fromChatId: chatId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.chatId) {
+        setChatError(data.error ?? "Could not start a new chat. Please try again.");
+        return;
+      }
+      setChatId(data.chatId);
+      setActiveSource(null);
+      setChatHistory((prev) => [{ id: data.chatId, title: data.title, createdAt: data.createdAt }, ...prev]);
+      setMessages([{
+        id: uid(),
+        role: "assistant",
+        content: `New chat started. Ask me anything about "${docInfo.fileName}".`,
+        isNew: false,
+      }]);
+      setTimeout(() => inputRef.current?.focus(), 60);
+    } catch {
+      setChatError("Network error. Please try again.");
+    } finally {
+      setStartingChat(false);
+    }
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, chatLoading]);
@@ -111,7 +146,13 @@ export default function ChatContainer({
     setInputValue(""); 
     setChatError(null);
     setMessages((p) => [...p, { id: uid(), role: "user", content: question }]);
-    
+    // Rename a placeholder "New chat" entry in the sidebar after its first question.
+    setChatHistory((prev) => prev.map((c) =>
+      c.id === chatId && c.title === "New chat"
+        ? { ...c, title: question.slice(0, 30) + (question.length > 30 ? "..." : "") }
+        : c
+    ));
+
     const msgId = uid();
     setChatLoading(true);
     setIsStreaming(true);
@@ -307,7 +348,7 @@ export default function ChatContainer({
         </div>
 
         <div className="mb-4 flex flex-col gap-2">
-          <button onClick={onReset} className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-center gap-2'} bg-white border border-gray-200/50 hover:bg-gray-50 text-[#1f1f1f] py-2.5 ${isCollapsed ? 'px-0' : 'px-4'} rounded-xl shadow-sm transition-all active:scale-[0.98]`} type="button">
+          <button onClick={handleNewChat} disabled={startingChat} className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-center gap-2'} bg-white border border-gray-200/50 hover:bg-gray-50 text-[#1f1f1f] py-2.5 ${isCollapsed ? 'px-0' : 'px-4'} rounded-xl shadow-sm transition-all active:scale-[0.98]`} type="button">
             <Plus size={16} className="shrink-0" />
             <span className={`text-[13px] font-medium transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>New Chat</span>
           </button>

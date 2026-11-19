@@ -58,6 +58,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // A chat started with "New Chat" has a placeholder title; name it after the first question.
+    if (chatId) {
+      await query(
+        `UPDATE "Chat" SET title = $1 WHERE id = $2 AND "userId" = $3 AND title = 'New chat'`,
+        [question.slice(0, 30) + (question.length > 30 ? "..." : ""), activeChatId, userId]
+      );
+    }
+
     // 1. Database: Save User's Message
     const userMsgId = generateUUID();
     await query(
