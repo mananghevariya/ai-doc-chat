@@ -143,12 +143,12 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
   const chunksLimitReached = currentTotalChunks >= MAX_CHUNKS;
 
   return (
-    <div className="min-h-screen bg-background relative flex items-center justify-center p-4 overflow-hidden">
+    <div className="min-h-screen bg-background relative isolate flex items-center justify-center p-4 overflow-hidden">
       <div className="absolute top-4 right-4 z-20 rounded-xl bg-card/70 border border-line/60 backdrop-blur-md"><ThemeToggle /></div>
       <div className="absolute inset-0 pointer-events-none -z-10">
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-secondary-fixed opacity-30 blur-3xl"></div>
-        <div className="absolute top-1/4 -right-40 w-[500px] h-[500px] rounded-full bg-tertiary-fixed opacity-20 blur-3xl"></div>
-        <div className="absolute -bottom-40 left-1/3 w-[700px] h-[400px] rounded-full bg-primary-fixed opacity-30 blur-3xl"></div>
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-secondary-fixed opacity-30 dark:bg-cyan-500/20 dark:opacity-100 blur-3xl"></div>
+        <div className="absolute top-1/4 -right-40 w-[500px] h-[500px] rounded-full bg-tertiary-fixed opacity-20 dark:bg-fuchsia-500/20 dark:opacity-100 blur-3xl"></div>
+        <div className="absolute -bottom-40 left-1/3 w-[700px] h-[400px] rounded-full bg-primary-fixed opacity-30 dark:bg-violet-600/30 dark:opacity-100 blur-3xl"></div>
       </div>
 
       <div className="relative z-10 w-full max-w-2xl flex flex-col items-center">
@@ -159,7 +159,7 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
         </div>
 
         <div className="text-center mb-10">
-          <h1 className="font-display text-display text-on-surface mb-4">
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-brand mb-4 pb-1">
             Chat with Your Documents
           </h1>
           <p className="font-body-lg text-body-lg text-on-surface-variant max-w-md mx-auto">
@@ -167,7 +167,7 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
           </p>
         </div>
 
-        <div className="w-full bg-surface-container-lowest/90 backdrop-blur-xl rounded-[2rem] p-6 shadow-lg border border-surface-container">
+        <div className="w-full bg-surface-container-lowest/90 glow backdrop-blur-xl rounded-[2rem] p-6 shadow-lg border border-surface-container">
           
           {uploadedDocs.length > 0 && (
             <div className="mb-6">
@@ -236,7 +236,7 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
                     <button type="button"
                       disabled={uploading}
                       onClick={(e) => { e.stopPropagation(); handleUpload(); }}
-                      className="px-6 py-2 rounded-full bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md shadow-md transition-transform active:scale-95 flex items-center gap-2">
+                      className="px-6 py-2 rounded-full bg-brand hover:brightness-110 font-label-md text-label-md shadow-md transition-transform active:scale-95 flex items-center gap-2">
                       {uploading ? <SpinnerTeal size="sm" /> : <span className="material-symbols-outlined text-[18px]">upload</span>}
                       {uploading ? "Analyzing..." : "Confirm & Add"}
                     </button>
@@ -274,7 +274,7 @@ export default function UploadZone({ onUploadSuccess }: UploadZoneProps) {
           {uploadedDocs.length > 0 && (
             <button
               onClick={handleStartChatting}
-              className="mt-8 w-full py-4 rounded-full bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg shadow-[0_4px_16px_rgba(70,72,212,0.3)] transition-transform active:scale-[0.98] flex items-center justify-center gap-2"
+              className="mt-8 w-full py-4 rounded-full bg-brand hover:brightness-110 font-label-lg text-label-lg shadow-[0_4px_16px_rgba(70,72,212,0.3)] transition-transform active:scale-[0.98] flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-[20px]">chat</span>
               Start Chatting

@@ -335,12 +335,12 @@ export default function ChatContainer({
     <>
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden bg-background">
         
-              <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-100/60 dark:bg-primary/20 rounded-full blur-[100px] opacity-80 mix-blend-multiply dark:mix-blend-normal">
+              <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-blue-100/60 dark:bg-violet-600/30 rounded-full blur-[100px] opacity-80 mix-blend-multiply dark:mix-blend-normal">
       </div>
     
       
-        <div className="absolute top-1/4 -right-40 w-96 h-96 rounded-xl bg-tertiary-fixed opacity-20 blur-3xl"></div>
-        <div className="absolute -bottom-40 left-1/3 w-96 h-96 rounded-xl bg-primary-fixed opacity-30 blur-3xl"></div>
+        <div className="absolute top-1/4 -right-40 w-96 h-96 rounded-xl bg-tertiary-fixed opacity-20 dark:opacity-40 blur-3xl"></div>
+        <div className="absolute -bottom-40 left-1/3 w-96 h-96 rounded-xl bg-primary-fixed opacity-30 dark:bg-cyan-500/20 dark:opacity-100 blur-3xl"></div>
       </div>
 
       <aside className={`fixed left-4 top-4 bottom-4 h-[calc(100vh-32px)] ${isCollapsed ? 'w-20' : 'w-64'} bg-card/70 backdrop-blur-[40px] border border-line/60 shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.55)] rounded-3xl z-50 flex flex-col p-4 transition-all duration-300`}>
@@ -355,7 +355,7 @@ export default function ChatContainer({
             <span className={`text-[13px] font-medium transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>New Chat</span>
           </button>
           
-          <button onClick={() => addDocInputRef.current?.click()} disabled={addingDoc} className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-center gap-2'} bg-[#0f1115] hover:bg-[#1a1d24] dark:bg-primary dark:hover:bg-primary-container dark:text-on-primary text-white py-2.5 ${isCollapsed ? 'px-0' : 'px-4'} rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.15)] transition-all active:scale-[0.98]`} type="button">
+          <button onClick={() => addDocInputRef.current?.click()} disabled={addingDoc} className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-center gap-2'} bg-brand hover:brightness-110 py-2.5 ${isCollapsed ? 'px-0' : 'px-4'} rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.15)] transition-all active:scale-[0.98]`} type="button">
             {addingDoc ? <SpinnerTeal size="sm" /> : <FileText size={16} className="shrink-0" />}
             <span className={`text-[13px] font-medium transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100 w-auto'}`}>{addingDoc ? "Uploading..." : "Upload Document"}</span>
           </button>
@@ -452,7 +452,7 @@ export default function ChatContainer({
                     <span className="truncate font-medium text-on-surface">{currentDocs.length > 1 ? `${currentDocs.length} documents` : currentDocs[0].fileName}</span>
                     <span className="shrink-0">· {docInfo.pageCount} {docInfo.pageCount === 1 ? "page" : "pages"} · {docInfo.wordCount.toLocaleString()} words</span>
                   </div>
-                  <h2 className="text-[28px] sm:text-[32px] font-medium text-ink leading-tight">
+                  <h2 className="text-[28px] sm:text-[32px] font-semibold text-brand leading-tight pb-1">
                     Ask anything about {currentDocs.length > 1 ? "these documents" : "this document"}
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
@@ -490,7 +490,7 @@ export default function ChatContainer({
 
                 {chatLoading && (
                   <div className="flex items-start gap-4 w-full">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-primary-container flex items-center justify-center shadow-md text-on-primary shrink-0 mt-1">
+                    <div className="w-8 h-8 rounded-full bg-brand flex items-center justify-center shadow-md shrink-0 mt-1">
                       <Sparkles size={16} />
                     </div>
                     <div className="flex-1 py-1 flex flex-col gap-2 transition-all">
@@ -525,7 +525,7 @@ export default function ChatContainer({
                 </button>
               </div>
             )}
-            <form onSubmit={handleSend} className="w-full bg-card/90 backdrop-blur-3xl rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] p-2 flex items-center gap-2 transition-all border border-line/70 focus-within:border-primary/50 focus-within:shadow-[0_8px_32px_rgba(70,72,212,0.15)]">
+            <form onSubmit={handleSend} className="w-full bg-card/90 glow backdrop-blur-3xl rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.5)] p-2 flex items-center gap-2 transition-all border border-line/70 focus-within:border-primary/50 focus-within:shadow-[0_8px_32px_rgba(70,72,212,0.15)]">
               <button onClick={() => addDocInputRef.current?.click()} disabled={addingDoc} aria-label="Add file or context" className="w-10 h-10 rounded-full flex items-center justify-center bg-hover text-muted hover:text-ink hover:bg-line transition-colors shrink-0" type="button">
                 <Plus size={20} className="" />
               </button>
@@ -533,7 +533,7 @@ export default function ChatContainer({
               <button aria-label="Voice input" className="w-9 h-9 rounded-full flex items-center justify-center text-outline hover:text-ink hover:bg-hover transition-colors shrink-0" type="button">
                 <Mic size={20} className="" />
               </button>
-              <button disabled={!canSend} aria-label="Send query" className="w-10 h-10 rounded-full bg-ink text-background dark:bg-primary dark:text-on-primary flex items-center justify-center shadow hover:opacity-85 transition-all shrink-0 disabled:opacity-30 disabled:hover:scale-100" type="submit">
+              <button disabled={!canSend} aria-label="Send query" className="w-10 h-10 rounded-full bg-brand flex items-center justify-center shadow-md shadow-primary/30 hover:brightness-110 transition-all shrink-0 disabled:opacity-30 disabled:hover:scale-100" type="submit">
                 {chatLoading ? <SpinnerTeal size="sm" /> : <ArrowUp size={20} className="" />}
               </button>
             </form>

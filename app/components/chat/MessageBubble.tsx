@@ -60,7 +60,7 @@ export default function MessageBubble({
     return (
       <div className="flex justify-end items-start gap-3 w-full mt-4">
         <div className="flex flex-col items-end max-w-xl gap-1">
-          <div className="bg-primary text-on-primary py-2.5 px-4 rounded-3xl rounded-br-sm shadow-md">
+          <div className="bg-brand py-2.5 px-4 rounded-3xl rounded-br-sm shadow-md shadow-primary/20">
             {renderUserMessage(message.content)}
           </div>
           <div className="flex items-center gap-1 mt-1 pr-1 opacity-60">
@@ -68,7 +68,7 @@ export default function MessageBubble({
             <CheckCheck size={14} className="text-primary" />
           </div>
         </div>
-        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-sm text-on-primary shrink-0 mb-5">
+        <div className="w-8 h-8 rounded-full bg-brand flex items-center justify-center shadow-sm shrink-0 mb-5">
           <User size={16} />
         </div>
       </div>
@@ -77,7 +77,7 @@ export default function MessageBubble({
 
   return (
     <div className="flex items-start gap-4 w-full">
-      <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-primary to-primary-container flex items-center justify-center shadow-sm text-on-primary shrink-0 mt-1">
+      <div className="w-9 h-9 rounded-2xl bg-brand flex items-center justify-center shadow-md shadow-primary/25 shrink-0 mt-1">
         <Sparkles size={16} />
       </div>
       <div className="flex-1 py-1 flex flex-col gap-2 transition-all">
