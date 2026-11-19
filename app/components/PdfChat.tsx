@@ -26,11 +26,17 @@ export default function PdfChat() {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
+        // A saved document is only usable if it is still linked to a server-side
+        // chat (chatId). Without it the AI would answer with no document context,
+        // so we drop the stale session and ask the user to upload again.
         if (
           parsed &&
           parsed.docInfo &&
-          Array.isArray(parsed.docInfo.chunks)
+          Array.isArray(parsed.docInfo.chunks) &&
+          typeof parsed.chatId === "string" &&
+          parsed.chatId
         ) {
+          setChatId(parsed.chatId);
           const restoredDocs = parsed.docInfo.documents || [
             {
               id: "doc-1",
@@ -62,7 +68,7 @@ export default function PdfChat() {
     if (!isRestored) return;
     if (docInfo) {
       try {
-        const sessionData = { docInfo, updatedAt: Date.now() };
+        const sessionData = { docInfo, chatId, updatedAt: Date.now() };
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sessionData));
       } catch { }
     } else {
@@ -70,7 +76,7 @@ export default function PdfChat() {
         localStorage.removeItem(LOCAL_STORAGE_KEY);
       } catch { }
     }
-  }, [docInfo, isRestored]);
+  }, [docInfo, chatId, isRestored]);
 
   // 3. Upload success handler (Vectorize before chatting)
   const handleUploadSuccess = async (info: DocInfo) => {
